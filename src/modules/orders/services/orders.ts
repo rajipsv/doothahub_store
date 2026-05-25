@@ -1,0 +1,146 @@
+import "server-only";
+import { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { db } from "@/lib/db";
+import { getCart, getCartById } from "@/modules/cart";
+
+function makeOrderNumber(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < 10; i++) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)] ?? "";
+  }
+  return out;
+}
+
+export async function createOrderFromCart(args: {
+  userId: string | null;
+  email: string;
+  cartId?: string;
+  shippingAddressId?: string;
+  paymentIntentId: string;
+}) {
+  const cart = args.cartId
+    ? await getCartById(args.cartId)
+    : await getCart(args.userId);
+  if (!cart) throw new Error("Cart not found");
+  if (cart.items.length === 0) throw new Error("Cart is empty");
+
+  const order = await db.$transaction(async (tx) => {
+    const created = await tx.order.create({
+      data: {
+        orderNumber: makeOrderNumber(),
+        userId: args.userId ?? null,
+        email: args.email,
+        status: OrderStatus.PENDING,
+        paymentStatus: PaymentStatus.AWAITING,
+        currency: cart.currency,
+        subtotalCents: cart.subtotalCents,
+        taxCents: cart.taxCents,
+        shippingCents: cart.shippingCents,
+        discountCents: cart.discountCents,
+        totalCents: cart.totalCents,
+        stripePaymentIntentId: args.paymentIntentId,
+        shippingAddressId: args.shippingAddressId ?? null,
+        couponCode: cart.couponCode,
+        items: {
+          create: cart.items.map((it) => ({
+            variantId: it.variantId,
+            productTitle: it.variant.product.title,
+            variantSku: it.variant.sku,
+            quantity: it.quantity,
+            unitPriceCents: it.variant.priceCents,
+            totalPriceCents: it.variant.priceCents * it.quantity,
+          })),
+        },
+      },
+      include: { items: true, shippingAddress: true },
+    });
+
+    for (const it of cart.items) {
+      await tx.productVariant.update({
+        where: { id: it.variantId },
+        data: { inventoryQty: { decrement: it.quantity } },
+      });
+    }
+
+    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    await tx.cart.update({
+      where: { id: cart.id },
+      data: { couponCode: null },
+    });
+
+    return created;
+  });
+
+  return order;
+}
+
+export async function markOrderPaid(paymentIntentId: string) {
+  const order = await db.order.findUnique({
+    where: { stripePaymentIntentId: paymentIntentId },
+  });
+  if (!order) return null;
+  return db.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.PAID,
+      paymentStatus: PaymentStatus.SUCCEEDED,
+    },
+  });
+}
+
+export async function markOrderFailed(paymentIntentId: string) {
+  const order = await db.order.findUnique({
+    where: { stripePaymentIntentId: paymentIntentId },
+  });
+  if (!order) return null;
+  return db.order.update({
+    where: { id: order.id },
+    data: { paymentStatus: PaymentStatus.FAILED },
+  });
+}
+
+export async function markOrderRefunded(paymentIntentId: string, fully = true) {
+  const order = await db.order.findUnique({
+    where: { stripePaymentIntentId: paymentIntentId },
+  });
+  if (!order) return null;
+  return db.order.update({
+    where: { id: order.id },
+    data: {
+      status: fully ? OrderStatus.REFUNDED : order.status,
+      paymentStatus: fully
+        ? PaymentStatus.REFUNDED
+        : PaymentStatus.PARTIALLY_REFUNDED,
+    },
+  });
+}
+
+export async function getOrder(id: string, userId?: string) {
+  const where: Prisma.OrderWhereInput = { id };
+  if (userId) where.userId = userId;
+  return db.order.findFirst({
+    where,
+    include: { items: true, shippingAddress: true },
+  });
+}
+
+export async function listUserOrders(userId: string) {
+  return db.order.findMany({
+    where: { userId },
+    include: { items: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function listAllOrders(limit = 100) {
+  return db.order.findMany({
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: { items: true, user: { select: { email: true, name: true } } },
+  });
+}
+
+export async function updateOrderStatus(id: string, status: OrderStatus) {
+  return db.order.update({ where: { id }, data: { status } });
+}

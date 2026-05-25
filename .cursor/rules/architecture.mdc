@@ -1,0 +1,36 @@
+---
+description: Architectural conventions for the DoothaHub Store codebase
+alwaysApply: true
+---
+
+# Architecture conventions
+
+## Module structure
+- All domain logic lives in `src/modules/<name>/`.
+- Each module has the following layout:
+  - `index.ts` — the **only** import surface for code outside the module
+  - `actions/` — server actions (`"use server"`), input-validated with Zod
+  - `services/` — pure server functions over Prisma (testable, reusable)
+  - `queries.ts` — read-side helpers, wrapped in `unstable_cache` with tags
+  - `schemas/` — Zod schemas (single source of truth)
+  - `components/` — React components scoped to this domain
+  - `types.ts` — DTOs and re-exports
+
+## Boundary rules (enforced by ESLint)
+- Files outside `src/modules/X` **must** import only from `@/modules/X` (not `@/modules/X/services/...`).
+- This keeps refactors local — the module's internal layout can change without breaking consumers.
+
+## Server-only enforcement
+- Every file under `services/`, `queries.ts`, `actions/`, and `src/lib/db.ts`, `stripe.ts`, `cloudinary.ts`, `resend.ts` starts with `import "server-only"`.
+- This prevents secrets and Prisma client from leaking into client bundles.
+
+## Data access
+- **Only** `services/` and `queries.ts` may import `@/lib/db`. Actions and route handlers go through services.
+- All Prisma queries that read from FTS or use raw SQL live in `services/` files clearly named (e.g. `services/search.ts`).
+
+## Path aliases
+- `@/*` → `src/*`
+- `@/modules/*` → `src/modules/*`
+- `@/lib/*` → `src/lib/*`
+- `@/components/*` → `src/components/*`
+- `@/emails/*` → `emails/*`

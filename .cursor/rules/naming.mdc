@@ -1,0 +1,16 @@
+---
+description: Naming conventions
+alwaysApply: true
+---
+
+# Naming
+
+- **Files**: kebab-case (`product-card.tsx`) — exception: PascalCase for component files (`ProductCard.tsx`).
+- **Folders**: kebab-case.
+- **Components**: PascalCase, one component per file.
+- **Hooks**: `useFoo`, camelCase.
+- **Server actions**: verbs — `addToCart`, `createOrder`, `applyCoupon`.
+- **Services**: verbs — `listProducts`, `getProductBySlug`, `createPaymentIntent`.
+- **Zod schemas**: `xxxSchema` exported from `schemas/` and re-exported from `index.ts`.
+- **Types/Interfaces**: PascalCase. Suffix DTOs with `DTO` only when ambiguous (e.g., `OrderDTO`).
+- **Env vars**: SCREAMING_SNAKE_CASE. Client-exposed vars must be prefixed `NEXT_PUBLIC_`.

@@ -1,0 +1,17 @@
+---
+description: React + Next.js patterns
+alwaysApply: true
+---
+
+# React + Next.js App Router patterns
+
+- Default everything to **Server Components**. Add `"use client"` only when needed (state, effects, browser APIs, event handlers).
+- Data fetching: in RSC pages, await services/queries directly. Never `useEffect` for initial data.
+- Mutations: use Server Actions (`"use server"`). Validate input with Zod at the top of every action.
+- Caching:
+  - For static pages, use `export const revalidate = N` or `unstable_cache` with tags.
+  - Invalidate by calling helpers in `@/lib/cache`.
+- Forms: React Hook Form + Zod resolver. Reuse the same Zod schema in the server action.
+- Loading and error: every route folder that fetches data must have `loading.tsx` and `error.tsx` (at least minimal).
+- Images: always `next/image` with explicit width/height; use the Cloudinary loader for product images.
+- Suspense streams in: wrap below-the-fold data in `<Suspense fallback={...}>`.

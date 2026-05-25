@@ -1,0 +1,19 @@
+---
+description: Prisma patterns for the DoothaHub Store
+alwaysApply: true
+---
+
+# Prisma patterns
+
+- Use the singleton from `@/lib/db` (never `new PrismaClient()` elsewhere).
+- All models have:
+  - `id String @id @default(uuid()) @db.Uuid`
+  - `createdAt DateTime @default(now())`
+  - `updatedAt DateTime @updatedAt`
+  - `deletedAt DateTime?` for soft delete (filter `where: { deletedAt: null }` in service helpers)
+  - `tenantId String? @db.Uuid` on tenant-scoped models (User, Product, Category, Order)
+- Always create a service-level helper like `findActiveProducts()` that pre-applies soft-delete filter — never call `db.product.findMany` directly from a page.
+- Use `select` over `include` for read-heavy paths to keep payloads small.
+- For full-text search, use raw SQL via `db.$queryRaw` (see `src/modules/catalog/services/search.ts`).
+- Migrations: never edit a migration after it's been applied to a shared environment. Add a new migration instead.
+- Generators: run `pnpm db:generate` after every schema change.

@@ -1,0 +1,17 @@
+---
+description: General coding standards
+alwaysApply: true
+---
+
+# Coding standards
+
+- TypeScript strict mode everywhere. No `any` without a `// eslint-disable-next-line` and a one-line justification.
+- Prefer `type` imports: `import type { Foo } from "..."`.
+- Filenames: kebab-case for files, PascalCase for component files (`ProductCard.tsx`).
+- Component props: declare `Props` type / interface, destructure in signature, no `React.FC`.
+- Tailwind classes are sorted by `prettier-plugin-tailwindcss`. Never disable it.
+- Use the `cn()` helper from `@/lib/utils` for conditional classnames.
+- Money is stored as **integer cents** everywhere; format only in the view layer via `formatMoney`.
+- Dates: store UTC in DB, format at the edge.
+- No comments that just narrate the code. Comments should explain *why*, not *what*.
+- Throw typed errors from services; map to user-friendly messages in actions / route handlers.
