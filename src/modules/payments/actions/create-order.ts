@@ -23,6 +23,15 @@ export async function createRazorpayCheckoutOrderAction(args: {
   email: string;
   name?: string;
 }): Promise<CreateRazorpayOrderResult> {
+  const publicKeyId = env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET || !publicKeyId) {
+    return {
+      ok: false,
+      error:
+        "Payments are not configured on this site yet. Please contact the store administrator.",
+    };
+  }
+
   const hdrs = await headers();
   const ip = hdrs.get("x-forwarded-for") ?? "anon";
   const rl = await checkoutLimiter.limit(`rzp:${ip}`);
@@ -47,7 +56,7 @@ export async function createRazorpayCheckoutOrderAction(args: {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      keyId: env.RAZORPAY_KEY_ID,
+      keyId: publicKeyId,
       cartId: cart.id,
       prefill: { email: args.email, name: args.name ?? user?.name ?? undefined },
     };

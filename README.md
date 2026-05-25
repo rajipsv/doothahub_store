@@ -70,7 +70,6 @@ The boundary is **enforced by ESLint** (`no-restricted-imports`): outside code c
 ```bash
 pnpm install
 cp .env.example .env
-# fill in DATABASE_URL, DIRECT_URL, AUTH_SECRET, RAZORPAY_* at minimum
 ```
 
 Generate an `AUTH_SECRET`:
@@ -78,6 +77,31 @@ Generate an `AUTH_SECRET`:
 ```bash
 openssl rand -base64 32
 ```
+
+### Minimum env vars by goal
+
+The env validator is intentionally permissive so you can deploy in stages:
+
+| Goal | Required env vars |
+| --- | --- |
+| **Just deploy the storefront** (browse + cart) | `DATABASE_URL` |
+| Also enable sign-in / sign-up | `+ AUTH_SECRET` (32+ chars) |
+| Also enable checkout / orders | `+ RAZORPAY_KEY_ID` `+ RAZORPAY_KEY_SECRET` `+ NEXT_PUBLIC_RAZORPAY_KEY_ID` `+ RAZORPAY_WEBHOOK_SECRET` |
+| Also enable Google / GitHub OAuth | `+ AUTH_GOOGLE_ID` / `_SECRET`, `AUTH_GITHUB_ID` / `_SECRET` |
+| Also enable order-confirmation emails | `+ RESEND_API_KEY` `+ RESEND_FROM_EMAIL` |
+| Also enable product image uploads (admin) | `+ CLOUDINARY_CLOUD_NAME` `+ CLOUDINARY_API_KEY` `+ CLOUDINARY_API_SECRET` `+ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` |
+| Also enable rate limiting | `+ UPSTASH_REDIS_REST_URL` `+ UPSTASH_REDIS_REST_TOKEN` |
+| Also enable error tracking | `+ SENTRY_DSN` (+ `NEXT_PUBLIC_SENTRY_DSN`) |
+| Production-only niceties | `NEXT_PUBLIC_APP_URL` (auto-derived from `VERCEL_URL` if absent) |
+
+`DIRECT_URL` falls back to `DATABASE_URL` automatically, so you can paste a single Neon URL and skip the separate "direct" connection if you're not running migrations from production.
+
+When optional credentials are missing:
+
+- **Razorpay missing** → checkout page renders but the "Pay" button returns `Payments are not configured...`.
+- **AUTH_SECRET missing** → sign-in / sign-up routes 500; browsing & cart still work fully.
+- **Resend missing** → order confirmation email is silently skipped.
+- **Cloudinary missing** → admin product-image upload UI shows an error; products without images still work.
 
 ### 3. Razorpay keys
 

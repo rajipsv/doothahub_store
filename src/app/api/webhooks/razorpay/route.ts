@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyWebhookSignature } from "@/lib/razorpay";
+import { env } from "@/lib/env";
 import {
   handleRazorpayEvent,
   type RazorpayWebhookEvent,
@@ -11,6 +12,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  if (!env.RAZORPAY_WEBHOOK_SECRET) {
+    logger.warn("razorpay webhook hit but RAZORPAY_WEBHOOK_SECRET is unset");
+    return new NextResponse("Payments not configured", { status: 503 });
+  }
+
   const sig = req.headers.get("x-razorpay-signature");
   if (!sig) return new NextResponse("Missing signature", { status: 400 });
 
