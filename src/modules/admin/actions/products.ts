@@ -53,15 +53,14 @@ export async function createProductAction(formData: FormData) {
   return { ok: true, id: created.id };
 }
 
-export async function archiveProductAction(formData: FormData) {
+export async function archiveProductAction(formData: FormData): Promise<void> {
   await requireRole("ADMIN");
   const id = formData.get("id");
-  if (typeof id !== "string") return { ok: false };
+  if (typeof id !== "string") return;
   const product = await db.product.update({
     where: { id },
     data: { status: "ARCHIVED" },
   });
   bustProductCaches(product.slug);
   revalidatePath("/admin/products");
-  return { ok: true };
 }

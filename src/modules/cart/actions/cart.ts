@@ -14,67 +14,63 @@ import {
   removeItem,
   updateItemQuantity,
 } from "@/modules/cart/services/cart";
+import { logger } from "@/lib/logger";
 
-export async function addItemAction(formData: FormData) {
+function bustCartLayers() {
+  revalidatePath("/cart");
+  revalidatePath("/(store)", "layout");
+}
+
+export async function addItemAction(formData: FormData): Promise<void> {
   const parsed = addItemSchema.safeParse({
     variantId: formData.get("variantId"),
     quantity: formData.get("quantity") ?? 1,
   });
-  if (!parsed.success) {
-    return { ok: false, error: "Invalid input" };
-  }
+  if (!parsed.success) return;
   const user = await getOptionalUser();
   await addItemToCart({
     userId: user?.id ?? null,
     variantId: parsed.data.variantId,
     quantity: parsed.data.quantity,
   });
-  revalidatePath("/cart");
-  revalidatePath("/(store)", "layout");
-  return { ok: true };
+  bustCartLayers();
 }
 
-export async function updateItemAction(formData: FormData) {
+export async function updateItemAction(formData: FormData): Promise<void> {
   const parsed = updateItemSchema.safeParse({
     itemId: formData.get("itemId"),
     quantity: formData.get("quantity"),
   });
-  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  if (!parsed.success) return;
   const user = await getOptionalUser();
   await updateItemQuantity({
     userId: user?.id ?? null,
     itemId: parsed.data.itemId,
     quantity: parsed.data.quantity,
   });
-  revalidatePath("/cart");
-  revalidatePath("/(store)", "layout");
-  return { ok: true };
+  bustCartLayers();
 }
 
-export async function removeItemAction(formData: FormData) {
+export async function removeItemAction(formData: FormData): Promise<void> {
   const parsed = removeItemSchema.safeParse({
     itemId: formData.get("itemId"),
   });
-  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  if (!parsed.success) return;
   const user = await getOptionalUser();
   await removeItem({ userId: user?.id ?? null, itemId: parsed.data.itemId });
-  revalidatePath("/cart");
-  revalidatePath("/(store)", "layout");
-  return { ok: true };
+  bustCartLayers();
 }
 
-export async function applyCouponAction(formData: FormData) {
+export async function applyCouponAction(formData: FormData): Promise<void> {
   const parsed = applyCouponSchema.safeParse({ code: formData.get("code") });
-  if (!parsed.success) return { ok: false, error: "Invalid coupon" };
+  if (!parsed.success) return;
   const user = await getOptionalUser();
   try {
     await applyCoupon({ userId: user?.id ?? null, code: parsed.data.code });
     revalidatePath("/cart");
-    return { ok: true };
   } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Coupon error",
-    };
+    logger.warn("applyCoupon failed", {
+      msg: err instanceof Error ? err.message : String(err),
+    });
   }
 }

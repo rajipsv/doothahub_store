@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   productFiltersSchema,
   productCreateSchema,
-} from "@/modules/catalog";
+} from "@/modules/catalog/schemas/product";
 
 describe("catalog schemas", () => {
   it("parses default product filters", () => {

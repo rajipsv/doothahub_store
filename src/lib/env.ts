@@ -15,8 +15,10 @@ export const env = createEnv({
     AUTH_GITHUB_ID: z.string().optional(),
     AUTH_GITHUB_SECRET: z.string().optional(),
 
-    STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
-    STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
+    // Razorpay (India-first payment gateway)
+    RAZORPAY_KEY_ID: z.string().startsWith("rzp_"),
+    RAZORPAY_KEY_SECRET: z.string().min(10),
+    RAZORPAY_WEBHOOK_SECRET: z.string().min(10),
 
     RESEND_API_KEY: z.string().startsWith("re_").optional(),
     RESEND_FROM_EMAIL: z.string().email().optional(),
@@ -35,7 +37,7 @@ export const env = createEnv({
       .default("development"),
   },
   client: {
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().startsWith("rzp_"),
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
@@ -44,8 +46,7 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_NAME: z.string().default("DoothaHub Store"),
   },
   experimental__runtimeEnv: {
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
-      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,

@@ -10,13 +10,13 @@ export const dynamic = "force-dynamic";
 export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pi?: string }>;
+  searchParams: Promise<{ o?: string }>;
 }) {
-  const { pi } = await searchParams;
+  const { o } = await searchParams;
 
-  const order = pi
+  const order = o
     ? await db.order.findUnique({
-        where: { stripePaymentIntentId: pi },
+        where: { orderNumber: o },
         include: { items: true, shippingAddress: true },
       })
     : null;

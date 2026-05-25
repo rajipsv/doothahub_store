@@ -5,11 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatMoney(amountCents: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatMoney(amountMinor: number, currency = "INR"): string {
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-  }).format(amountCents / 100);
+    maximumFractionDigits: 2,
+  }).format(amountMinor / 100);
 }
 
 export function slugify(input: string): string {

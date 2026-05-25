@@ -214,10 +214,11 @@ model ProductVariant {
   sku               String   @unique
   priceCents        Int
   comparePriceCents Int?
-  currency          String   @default("USD") @db.Char(3)
+  currency          String   @default("INR") @db.Char(3)
   inventoryQty      Int      @default(0)
   weightGrams       Int?
   attributes        Json     @default("{}")
+
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems  CartItem[]
@@ -240,7 +241,7 @@ model Cart {
   userId     String? @db.Uuid
   sessionKey String? @unique
   couponCode String?
-  currency   String  @default("USD") @db.Char(3)
+  currency   String  @default("INR") @db.Char(3)
 
   user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]
@@ -301,8 +302,9 @@ model Order {
   shippingCents         Int           @default(0)
   discountCents         Int           @default(0)
   totalCents            Int
-  currency              String        @default("USD") @db.Char(3)
-  stripePaymentIntentId String?       @unique
+  currency              String        @default("INR") @db.Char(3)
+  razorpayOrderId       String?       @unique
+  razorpayPaymentId     String?       @unique
   shippingAddressId     String?       @db.Uuid
   couponCode            String?
 
@@ -422,16 +424,18 @@ model WishlistItem {
 }
 
 // ====================================================================
-// Stripe webhook idempotency
+// Payment provider webhook idempotency (Razorpay today; provider-agnostic)
 // ====================================================================
 
-model StripeEvent {
-  id           String   @id @default(uuid()) @db.Uuid
-  stripeId     String   @unique
-  type         String
-  payload      Json
-  processedAt  DateTime @default(now())
+model PaymentEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  provider    String   // e.g. "razorpay"
+  externalId  String   // event id from the provider
+  type        String
+  payload     Json
+  processedAt DateTime @default(now())
 
+  @@unique([provider, externalId])
   @@index([type])
-  @@map("stripe_events")
+  @@map("payment_events")
 }

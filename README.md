@@ -1,6 +1,6 @@
 # DoothaHub Store
 
-A modern, modular e-commerce platform built with Next.js 15, Prisma, Neon Postgres, Stripe, and Tailwind.
+A modern, modular e-commerce platform built with Next.js 15, Prisma, Neon Postgres, **Razorpay**, and Tailwind. India-first (INR, UPI, NetBanking, cards, wallets), production-ready, multi-tenant capable.
 
 ## Tech stack
 
@@ -9,21 +9,30 @@ A modern, modular e-commerce platform built with Next.js 15, Prisma, Neon Postgr
 - **Styling**: Tailwind CSS + shadcn/ui primitives
 - **DB**: Neon (serverless Postgres) + Prisma
 - **Auth**: Auth.js v5 (Credentials + Google + GitHub, JWT sessions)
-- **Payments**: Stripe (Payment Intents + webhook with idempotency)
+- **Payments**: **Razorpay** (Orders API + Checkout JS + signed webhook, idempotent)
 - **Email**: Resend + React Email
 - **Media**: Cloudinary (signed direct uploads)
 - **Observability**: Sentry + PostHog
 - **Tests**: Vitest (unit) + Playwright (E2E)
 - **Hosting**: Vercel
 
+## Why Razorpay?
+
+For an India-based storefront Razorpay is the better default:
+
+- **Free to start** — no setup fee, no monthly fee, no contract. You only pay per-transaction.
+- Native **UPI**, NetBanking, all Indian wallets, Indian cards out of the box (UPI is ~50%+ of Indian online checkouts; Stripe India is invite-only and UPI is friction-heavy there).
+- **Test mode** keys work instantly with no KYC — perfect for development and CI.
+- Familiar checkout UI for Indian shoppers → higher conversion.
+
 ## Project structure
 
 ```
 src/
   app/                  # Next.js routes (store, auth, account, admin, api)
-  modules/              # domain modules (catalog, cart, checkout, orders, ...)
+  modules/              # domain modules (catalog, cart, checkout, orders, payments, ...)
   components/           # shared UI primitives + layout + seo
-  lib/                  # cross-cutting singletons (db, stripe, env, ...)
+  lib/                  # cross-cutting singletons (db, razorpay, env, ...)
   middleware.ts         # auth + RBAC gating
 prisma/                 # schema, migrations, seed, raw SQL (FTS)
 emails/                 # React Email templates
@@ -44,7 +53,7 @@ Each module under `src/modules/<name>/` follows the same layout:
   types.ts
 ```
 
-The boundary is **enforced by ESLint** (`no-restricted-imports`): outside code can only reach a module through its `index.ts`. This is the single most important maintainability rule.
+The boundary is **enforced by ESLint** (`no-restricted-imports`): outside code can only reach a module through its `index.ts`.
 
 ## Getting started
 
@@ -53,7 +62,7 @@ The boundary is **enforced by ESLint** (`no-restricted-imports`): outside code c
 - Node 20+
 - pnpm 9+
 - A [Neon](https://neon.tech) database (free tier works)
-- [Stripe](https://stripe.com) test account
+- A [Razorpay](https://razorpay.com) account — **test mode keys are free and work without KYC**. Production needs business KYC (PAN, address proof, bank account).
 - (Optional) Cloudinary, Resend, Upstash, Sentry, PostHog accounts
 
 ### 2. Install & configure
@@ -61,7 +70,7 @@ The boundary is **enforced by ESLint** (`no-restricted-imports`): outside code c
 ```bash
 pnpm install
 cp .env.example .env
-# fill in DATABASE_URL, DIRECT_URL, AUTH_SECRET, STRIPE_* at minimum
+# fill in DATABASE_URL, DIRECT_URL, AUTH_SECRET, RAZORPAY_* at minimum
 ```
 
 Generate an `AUTH_SECRET`:
@@ -70,17 +79,38 @@ Generate an `AUTH_SECRET`:
 openssl rand -base64 32
 ```
 
-### 3. Database
+### 3. Razorpay keys
+
+1. Sign up at <https://dashboard.razorpay.com/signup>.
+2. Stay in **Test Mode** (toggle in the top-left).
+3. Go to **Settings → API Keys → Generate Test Key**. You'll get a `key_id` (starts with `rzp_test_`) and `key_secret`.
+4. Put them in `.env`:
+   ```env
+   RAZORPAY_KEY_ID="rzp_test_..."
+   RAZORPAY_KEY_SECRET="..."
+   NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_test_..."   # same key_id, exposed to the client
+   ```
+5. For webhooks, go to **Settings → Webhooks → Create New Webhook**:
+   - URL: `https://<your-domain>/api/webhooks/razorpay`
+   - Events: `payment.captured`, `payment.failed`, `refund.processed`
+   - Set a secret and paste it into `RAZORPAY_WEBHOOK_SECRET`.
+
+Test cards / UPI:
+
+- Card: `4111 1111 1111 1111`, any future expiry, any CVV, OTP `1234`
+- UPI: `success@razorpay`
+
+### 4. Database
 
 ```bash
 pnpm db:migrate     # applies migrations + generates client
 pnpm db:fts         # applies the FTS (tsvector + GIN) raw migration
-pnpm db:seed        # inserts demo data + admin user
+pnpm db:seed        # inserts demo data + admin user (INR prices)
 ```
 
 Seeded admin user: `admin@doothahub.test` / `Admin123!`
 
-### 4. Run
+### 5. Run
 
 ```bash
 pnpm dev
@@ -88,11 +118,13 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
-### 5. Stripe webhook (local)
+### 6. Local webhooks
+
+Razorpay webhooks need a public URL. Use any tunnel (e.g. `cloudflared`):
 
 ```bash
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-# copy the printed `whsec_...` into STRIPE_WEBHOOK_SECRET
+cloudflared tunnel --url http://localhost:3000
+# then point the Razorpay dashboard webhook at https://<tunnel>/api/webhooks/razorpay
 ```
 
 ## Useful scripts
@@ -115,15 +147,16 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 
 1. Push to GitHub.
 2. Import to Vercel. Set all env vars from `.env.example`.
-3. Add Stripe webhook endpoint pointing to `https://<your-domain>/api/webhooks/stripe`. Paste the signing secret into `STRIPE_WEBHOOK_SECRET`.
+3. In the Razorpay dashboard, add a webhook for `https://<your-domain>/api/webhooks/razorpay`. Paste its secret into `RAZORPAY_WEBHOOK_SECRET`.
 4. Run `pnpm db:deploy` once against the production `DIRECT_URL`.
 
 ## Architecture decisions
 
-See `.cursor/rules/architecture.mdc` for the binding conventions. The TL;DR:
+See `.cursor/rules/architecture.mdc` for binding conventions. TL;DR:
 
-- One Next.js app, no monorepo. Modules give 95% of the maintainability with 10% of the overhead. Easy to extract later because each module has a single public surface.
+- One Next.js app, no monorepo. Modules give 95% of the maintainability with 10% of the overhead.
 - Server-first: every fetch is in a Server Component or Server Action. Client components only where needed.
-- Prisma client is a singleton (`@/lib/db`). Services own all DB access; actions and routes go through services.
+- Prisma client is a singleton (`@/lib/db`). The Razorpay client is **lazily** instantiated (`getRazorpay()` in `@/lib/razorpay`) so importing the module never reads `process.env` at top level — this keeps `next build` happy.
+- Services own all DB access; actions and routes go through services.
 - `tenantId` is on every tenant-scoped model (nullable today) so future multi-tenancy needs no schema changes.
-- Stripe webhooks are **idempotent** via the `StripeEvent` table — replays are safe.
+- Razorpay webhooks are **idempotent** via the `PaymentEvent` table — replays are safe.

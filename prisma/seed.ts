@@ -99,8 +99,10 @@ async function main() {
         create: {
           productId: product.id,
           sku,
-          priceCents: 2999 + sizes.indexOf(size) * 500,
-          comparePriceCents: 3999 + sizes.indexOf(size) * 500,
+          // Prices stored in the smallest currency unit (paise for INR).
+          priceCents: 99900 + sizes.indexOf(size) * 30000,
+          comparePriceCents: 149900 + sizes.indexOf(size) * 30000,
+          currency: "INR",
           inventoryQty: 50,
           attributes: { size },
         },

@@ -1,9 +1,8 @@
 import "server-only";
-import type Stripe from "stripe";
 import {
   isEventProcessed,
   recordEvent,
-} from "@/modules/payments/services/stripe";
+} from "@/modules/payments/services/razorpay";
 import {
   markOrderFailed,
   markOrderPaid,
@@ -14,61 +13,122 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendOrderConfirmation } from "@/modules/payments/services/notify";
 
-export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
-  if (await isEventProcessed(event.id)) return;
+/**
+ * Razorpay webhook event shape (the bits we use). The full spec lives at
+ * https://razorpay.com/docs/webhooks/payloads/
+ */
+type RazorpayPaymentEntity = {
+  id: string;
+  order_id: string | null;
+  status: string;
+  amount: number;
+  amount_refunded: number;
+  email?: string;
+  notes?: Record<string, string>;
+};
+
+type RazorpayRefundEntity = {
+  id: string;
+  payment_id: string;
+  amount: number;
+  status: string;
+};
+
+export type RazorpayWebhookEvent = {
+  event: string;
+  account_id?: string;
+  payload: {
+    payment?: { entity: RazorpayPaymentEntity };
+    refund?: { entity: RazorpayRefundEntity };
+  };
+};
+
+export async function handleRazorpayEvent(args: {
+  event: RazorpayWebhookEvent;
+  eventId: string;
+}): Promise<void> {
+  if (await isEventProcessed(args.eventId)) return;
 
   try {
-    switch (event.type) {
-      case "payment_intent.succeeded": {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await ensureOrderForIntent(pi);
-        const order = await markOrderPaid(pi.id);
+    switch (args.event.event) {
+      case "payment.captured":
+      case "payment.authorized": {
+        const payment = args.event.payload.payment?.entity;
+        if (!payment) break;
+        await ensureOrderForPayment(payment);
+        const order = await markOrderPaid({
+          razorpayOrderId: payment.order_id ?? "",
+          razorpayPaymentId: payment.id,
+        });
         if (order) {
           await sendOrderConfirmation(order.id);
         }
         break;
       }
-      case "payment_intent.payment_failed": {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await markOrderFailed(pi.id);
+      case "payment.failed": {
+        const payment = args.event.payload.payment?.entity;
+        if (!payment?.order_id) break;
+        await markOrderFailed(payment.order_id);
         break;
       }
-      case "charge.refunded": {
-        const charge = event.data.object as Stripe.Charge;
-        if (charge.payment_intent) {
-          const fully = charge.amount_refunded >= charge.amount;
-          await markOrderRefunded(
-            typeof charge.payment_intent === "string"
-              ? charge.payment_intent
-              : charge.payment_intent.id,
-            fully,
-          );
-        }
+      case "refund.processed":
+      case "refund.created": {
+        const refund = args.event.payload.refund?.entity;
+        if (!refund) break;
+        const payment = await fetchPaymentRefundContext(refund.payment_id);
+        if (!payment) break;
+        const fully = (payment.amount_refunded ?? 0) >= payment.amount;
+        await markOrderRefunded(refund.payment_id, fully);
         break;
       }
       default:
-        logger.debug("unhandled stripe event", { type: event.type });
+        logger.debug("unhandled razorpay event", { type: args.event.event });
     }
   } finally {
-    await recordEvent(event);
+    await recordEvent({
+      externalId: args.eventId,
+      type: args.event.event,
+      payload: args.event,
+    });
   }
 }
 
-async function ensureOrderForIntent(pi: Stripe.PaymentIntent) {
+async function ensureOrderForPayment(payment: RazorpayPaymentEntity) {
+  if (!payment.order_id) return null;
+
   const existing = await db.order.findUnique({
-    where: { stripePaymentIntentId: pi.id },
+    where: { razorpayOrderId: payment.order_id },
   });
   if (existing) return existing;
 
-  const cartId = pi.metadata?.cartId;
-  const userId = pi.metadata?.userId || null;
-  const email = pi.receipt_email ?? "";
+  const cartId = payment.notes?.cartId;
+  const userId = payment.notes?.userId || null;
+  const email = payment.notes?.email ?? payment.email ?? "";
   if (!cartId) return null;
 
   return createOrderFromCart({
     userId,
     email,
     cartId,
-    paymentIntentId: pi.id,
+    razorpayOrderId: payment.order_id,
+    razorpayPaymentId: payment.id,
   });
+}
+
+async function fetchPaymentRefundContext(paymentId: string) {
+  // Lazy import to avoid cycles + to allow tree-shaking from edge bundles.
+  const { getRazorpay } = await import("@/lib/razorpay");
+  try {
+    const p = await getRazorpay().payments.fetch(paymentId);
+    return {
+      amount: typeof p.amount === "string" ? Number(p.amount) : p.amount,
+      amount_refunded:
+        typeof p.amount_refunded === "string"
+          ? Number(p.amount_refunded)
+          : p.amount_refunded,
+    };
+  } catch (err) {
+    logger.warn("failed to fetch payment for refund", { paymentId, err });
+    return null;
+  }
 }

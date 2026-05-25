@@ -1,5 +1,6 @@
 import "server-only";
-import { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCart, getCartById } from "@/modules/cart";
 
@@ -17,7 +18,8 @@ export async function createOrderFromCart(args: {
   email: string;
   cartId?: string;
   shippingAddressId?: string;
-  paymentIntentId: string;
+  razorpayOrderId: string;
+  razorpayPaymentId?: string;
 }) {
   const cart = args.cartId
     ? await getCartById(args.cartId)
@@ -39,7 +41,8 @@ export async function createOrderFromCart(args: {
         shippingCents: cart.shippingCents,
         discountCents: cart.discountCents,
         totalCents: cart.totalCents,
-        stripePaymentIntentId: args.paymentIntentId,
+        razorpayOrderId: args.razorpayOrderId,
+        razorpayPaymentId: args.razorpayPaymentId ?? null,
         shippingAddressId: args.shippingAddressId ?? null,
         couponCode: cart.couponCode,
         items: {
@@ -75,23 +78,40 @@ export async function createOrderFromCart(args: {
   return order;
 }
 
-export async function markOrderPaid(paymentIntentId: string) {
+/**
+ * Mark an order as paid. Idempotent: safe to call from both the
+ * client-side post-checkout action and the webhook handler.
+ *
+ * Looks up the order by `razorpayOrderId` (the only id available before the
+ * payment) and stamps `razorpayPaymentId` if not already set.
+ */
+export async function markOrderPaid(args: {
+  razorpayOrderId: string;
+  razorpayPaymentId?: string;
+}) {
   const order = await db.order.findUnique({
-    where: { stripePaymentIntentId: paymentIntentId },
+    where: { razorpayOrderId: args.razorpayOrderId },
   });
   if (!order) return null;
+  if (
+    order.status === OrderStatus.PAID &&
+    order.paymentStatus === PaymentStatus.SUCCEEDED
+  ) {
+    return order;
+  }
   return db.order.update({
     where: { id: order.id },
     data: {
       status: OrderStatus.PAID,
       paymentStatus: PaymentStatus.SUCCEEDED,
+      razorpayPaymentId: args.razorpayPaymentId ?? order.razorpayPaymentId,
     },
   });
 }
 
-export async function markOrderFailed(paymentIntentId: string) {
+export async function markOrderFailed(razorpayOrderId: string) {
   const order = await db.order.findUnique({
-    where: { stripePaymentIntentId: paymentIntentId },
+    where: { razorpayOrderId },
   });
   if (!order) return null;
   return db.order.update({
@@ -100,9 +120,9 @@ export async function markOrderFailed(paymentIntentId: string) {
   });
 }
 
-export async function markOrderRefunded(paymentIntentId: string, fully = true) {
+export async function markOrderRefunded(razorpayPaymentId: string, fully = true) {
   const order = await db.order.findUnique({
-    where: { stripePaymentIntentId: paymentIntentId },
+    where: { razorpayPaymentId },
   });
   if (!order) return null;
   return db.order.update({
@@ -121,6 +141,13 @@ export async function getOrder(id: string, userId?: string) {
   if (userId) where.userId = userId;
   return db.order.findFirst({
     where,
+    include: { items: true, shippingAddress: true },
+  });
+}
+
+export async function getOrderByRazorpayOrderId(razorpayOrderId: string) {
+  return db.order.findUnique({
+    where: { razorpayOrderId },
     include: { items: true, shippingAddress: true },
   });
 }

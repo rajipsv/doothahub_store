@@ -1,5 +1,6 @@
 import "server-only";
-import { Prisma, ProductStatus } from "@prisma/client";
+import { ProductStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { ProductFiltersInput } from "@/modules/catalog/schemas/product";
 import type { ProductCardData, ProductDetail } from "@/modules/catalog/types";

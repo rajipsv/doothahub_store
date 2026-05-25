@@ -21,7 +21,8 @@ alwaysApply: true
 - This keeps refactors local — the module's internal layout can change without breaking consumers.
 
 ## Server-only enforcement
-- Every file under `services/`, `queries.ts`, `actions/`, and `src/lib/db.ts`, `stripe.ts`, `cloudinary.ts`, `resend.ts` starts with `import "server-only"`.
+- Every file under `services/`, `queries.ts`, `actions/`, and `src/lib/db.ts`, `razorpay.ts`, `cloudinary.ts`, `resend.ts` starts with `import "server-only"`.
+- Server SDK clients (Razorpay, Cloudinary, Resend, Prisma) are **lazy-instantiated** inside a `get<Client>()` helper, never at module top-level — otherwise `next build`'s static collect-page-data pass will throw when env vars are absent.
 - This prevents secrets and Prisma client from leaking into client bundles.
 
 ## Data access

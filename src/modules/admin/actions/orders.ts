@@ -7,29 +7,29 @@ import {
   getOrder,
   updateOrderStatus,
 } from "@/modules/orders";
-import { refundPaymentIntent } from "@/modules/payments";
+import { refundRazorpayPayment } from "@/modules/payments";
 import { bustOrderCaches } from "@/lib/cache";
+import { logger } from "@/lib/logger";
 
-export async function markShippedAction(formData: FormData) {
+export async function markShippedAction(formData: FormData): Promise<void> {
   await requireRole("ADMIN");
   const id = formData.get("id");
-  if (typeof id !== "string") return { ok: false };
+  if (typeof id !== "string") return;
   await updateOrderStatus(id, OrderStatus.FULFILLED);
   bustOrderCaches(id);
   revalidatePath("/admin/orders");
-  return { ok: true };
 }
 
-export async function refundOrderAction(formData: FormData) {
+export async function refundOrderAction(formData: FormData): Promise<void> {
   await requireRole("ADMIN");
   const id = formData.get("id");
-  if (typeof id !== "string") return { ok: false };
+  if (typeof id !== "string") return;
   const order = await getOrder(id);
-  if (!order?.stripePaymentIntentId) {
-    return { ok: false, error: "No payment intent on order" };
+  if (!order?.razorpayPaymentId) {
+    logger.warn("refund attempted without captured payment", { orderId: id });
+    return;
   }
-  await refundPaymentIntent(order.stripePaymentIntentId);
+  await refundRazorpayPayment({ razorpayPaymentId: order.razorpayPaymentId });
   bustOrderCaches(id);
   revalidatePath("/admin/orders");
-  return { ok: true };
 }

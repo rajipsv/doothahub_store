@@ -25,13 +25,6 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-  }
-}
-
 const providers: NextAuthConfig["providers"] = [
   Credentials({
     name: "Credentials",
@@ -89,8 +82,8 @@ export const authConfig = {
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = (token.role as Role) ?? "CUSTOMER";
       }
       return session;
     },

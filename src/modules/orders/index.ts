@@ -4,6 +4,7 @@ export {
   markOrderFailed,
   markOrderRefunded,
   getOrder,
+  getOrderByRazorpayOrderId,
   listUserOrders,
   listAllOrders,
   updateOrderStatus,

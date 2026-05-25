@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { PaymentStatus } from "@prisma/client";
 
 export async function getDashboardStats() {
   const since = new Date();

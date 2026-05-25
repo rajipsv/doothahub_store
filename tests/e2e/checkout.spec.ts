@@ -1,15 +1,15 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Happy path: browse \u2192 add to cart \u2192 reach checkout page.
+ * Happy path: browse → add to cart → reach checkout page.
  *
- * Full Stripe-test payment is skipped here because it requires:
- *   1. A configured Stripe test account
- *   2. A real STRIPE_WEBHOOK_SECRET piped via `stripe listen`
+ * Full Razorpay-test payment is skipped here because it requires:
+ *   1. Test-mode Razorpay keys (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)
+ *   2. A webhook tunnelled to /api/webhooks/razorpay
  *
- * Enable the .skip below once you've configured those in CI.
+ * Enable the .skip below once those are wired into CI.
  */
-test("browse \u2192 add to cart \u2192 checkout page", async ({ page }) => {
+test("browse → add to cart → checkout page", async ({ page }) => {
   await page.goto("/products");
   const firstProduct = page.locator("a[href^='/products/']").first();
   await firstProduct.click();
@@ -24,6 +24,6 @@ test("browse \u2192 add to cart \u2192 checkout page", async ({ page }) => {
   await expect(page).toHaveURL(/sign-in|checkout/);
 });
 
-test.skip("complete Stripe-test payment", async () => {
-  // Implement once STRIPE_* keys + `stripe listen` are wired in CI.
+test.skip("complete Razorpay-test payment", async () => {
+  // Implement once RAZORPAY_* keys + a webhook tunnel are wired in CI.
 });

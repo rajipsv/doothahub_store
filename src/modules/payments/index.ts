@@ -1,9 +1,19 @@
 export {
-  ensurePaymentIntent,
-  refundPaymentIntent,
+  createRazorpayOrder,
+  refundRazorpayPayment,
   isEventProcessed,
   recordEvent,
-} from "@/modules/payments/services/stripe";
-export { handleStripeEvent } from "@/modules/payments/services/webhook";
+} from "@/modules/payments/services/razorpay";
+export {
+  handleRazorpayEvent,
+  type RazorpayWebhookEvent,
+} from "@/modules/payments/services/webhook";
 export { sendOrderConfirmation } from "@/modules/payments/services/notify";
-export { createPaymentIntentAction } from "@/modules/payments/actions/payment-intent";
+export {
+  createRazorpayCheckoutOrderAction,
+  type CreateRazorpayOrderResult,
+} from "@/modules/payments/actions/create-order";
+export {
+  verifyAndPlaceOrderAction,
+  type VerifyResult,
+} from "@/modules/payments/actions/verify-payment";

@@ -11,8 +11,6 @@ type Props = {
 };
 
 export function VariantPicker({ variants, value, onChange }: Props) {
-  if (variants.length <= 1) return null;
-
   const attrKeys = React.useMemo(() => {
     const keys = new Set<string>();
     for (const v of variants) {
@@ -22,6 +20,8 @@ export function VariantPicker({ variants, value, onChange }: Props) {
     }
     return Array.from(keys);
   }, [variants]);
+
+  if (variants.length <= 1) return null;
 
   return (
     <div className="space-y-4">

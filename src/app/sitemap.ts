@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
+// Generated on-demand (with ISR), not at build time, so `next build` doesn't
+// need a live DB. First request renders + caches for `revalidate` seconds.
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

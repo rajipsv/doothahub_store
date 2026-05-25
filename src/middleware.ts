@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/modules/auth/config";
+import { auth } from "@/modules/auth/edge-config";
 
 const PROTECTED_PREFIXES = ["/account", "/admin", "/checkout"];
 const ADMIN_PREFIX = "/admin";

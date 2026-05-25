@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { signInSchema, signUpSchema } from "@/modules/auth";
+import { signInSchema, signUpSchema } from "@/modules/auth/schemas/credentials";
 
 describe("auth schemas", () => {
   it("rejects weak passwords on sign-up", () => {

@@ -1,5 +1,4 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import type { Cart, CartItem } from "@prisma/client";
@@ -12,7 +11,7 @@ async function getSessionKey(): Promise<string> {
   const store = await cookies();
   let key = store.get(CART_COOKIE)?.value;
   if (!key) {
-    key = randomUUID();
+    key = crypto.randomUUID();
     store.set(CART_COOKIE, key, {
       httpOnly: true,
       sameSite: "lax",

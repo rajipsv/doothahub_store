@@ -20,8 +20,9 @@ export default async function CheckoutPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="rounded-lg border bg-card p-6">
           <CheckoutForm
-            publishableKey={env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
             defaultEmail={user?.email ?? undefined}
+            defaultName={user?.name ?? undefined}
+            appName={env.NEXT_PUBLIC_APP_NAME}
           />
         </div>
         <CartSummary cart={cart} />

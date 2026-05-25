@@ -3,19 +3,17 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   getCachedProductBySlug,
-  listAllProductSlugs,
   ProductDetail,
 } from "@/modules/catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { addItemAction } from "@/modules/cart";
 import { absoluteUrl, formatMoney } from "@/lib/utils";
 
+// On-demand ISR: first request renders + caches, subsequent requests hit
+// the cache for `revalidate` seconds. Avoids slurping the whole catalog
+// at build time and works for a changing inventory.
 export const revalidate = 300;
-
-export async function generateStaticParams() {
-  const slugs = await listAllProductSlugs();
-  return slugs.slice(0, 50).map((slug) => ({ slug }));
-}
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,

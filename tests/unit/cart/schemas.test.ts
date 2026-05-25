@@ -3,7 +3,7 @@ import {
   addItemSchema,
   updateItemSchema,
   applyCouponSchema,
-} from "@/modules/cart";
+} from "@/modules/cart/schemas/cart";
 
 describe("cart schemas", () => {
   it("accepts a valid add item payload", () => {

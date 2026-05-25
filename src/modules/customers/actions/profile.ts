@@ -12,21 +12,18 @@ import {
   updateProfile,
 } from "@/modules/customers/services/profile";
 
-export async function updateProfileAction(formData: FormData) {
+export async function updateProfileAction(formData: FormData): Promise<void> {
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
     phone: formData.get("phone") || undefined,
   });
-  if (!parsed.success) {
-    return { ok: false, error: "Invalid input" };
-  }
+  if (!parsed.success) return;
   const user = await requireUser();
   await updateProfile(user.id, parsed.data);
   revalidatePath("/account");
-  return { ok: true };
 }
 
-export async function createAddressAction(formData: FormData) {
+export async function createAddressAction(formData: FormData): Promise<void> {
   const parsed = addressSchema.safeParse({
     fullName: formData.get("fullName"),
     line1: formData.get("line1"),
@@ -38,24 +35,16 @@ export async function createAddressAction(formData: FormData) {
     phone: formData.get("phone") || undefined,
     isDefault: formData.get("isDefault") === "on",
   });
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: "Invalid input",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
-  }
+  if (!parsed.success) return;
   const user = await requireUser();
   await createAddress(user.id, parsed.data);
   revalidatePath("/account/addresses");
-  return { ok: true };
 }
 
-export async function deleteAddressAction(formData: FormData) {
+export async function deleteAddressAction(formData: FormData): Promise<void> {
   const id = formData.get("id");
-  if (typeof id !== "string") return { ok: false };
+  if (typeof id !== "string") return;
   const user = await requireUser();
   await deleteAddress(user.id, id);
   revalidatePath("/account/addresses");
-  return { ok: true };
 }

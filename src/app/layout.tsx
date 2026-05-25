@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     template: "%s | DoothaHub Store",
   },
   description:
-    "Modern, fast, SEO-first e-commerce platform built on Next.js, Prisma, and Stripe.",
+    "Modern, fast, SEO-first e-commerce platform built on Next.js, Prisma, and Razorpay.",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     siteName: "DoothaHub Store",
   },
   twitter: { card: "summary_large_image" },
