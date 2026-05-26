@@ -6,6 +6,7 @@ export {
 export {
   createProductAction,
   archiveProductAction,
+  deleteProductAction,
 } from "@/modules/admin/actions/products";
 export {
   markShippedAction,

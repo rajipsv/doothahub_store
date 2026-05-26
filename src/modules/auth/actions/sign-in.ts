@@ -2,9 +2,23 @@
 
 import { signInSchema } from "@/modules/auth/schemas/credentials";
 import { signIn } from "@/modules/auth/config";
+import { verifyCredentials } from "@/modules/auth/services/users";
 import { authLimiter } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
+
+function destinationForRole(role: string | null | undefined): string {
+  switch (role) {
+    case "ADMIN":
+      return "/admin";
+    case "SELLER":
+      return "/admin/products";
+    case "SUPPORT":
+      return "/admin/orders";
+    default:
+      return "/account";
+  }
+}
 
 export type SignInState = {
   ok: boolean;
@@ -33,11 +47,19 @@ export async function signInAction(
     };
   }
 
+  // Pre-resolve the user so we know the destination *before* triggering
+  // the redirect. signIn() throws NEXT_REDIRECT on success, so we can't
+  // read anything after calling it.
+  const user = await verifyCredentials(parsed.data.email, parsed.data.password);
+  if (!user) {
+    return { ok: false, error: "Invalid email or password" };
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/account",
+      redirectTo: destinationForRole(user.role),
     });
     return { ok: true };
   } catch (err) {

@@ -64,3 +64,21 @@ export async function archiveProductAction(formData: FormData): Promise<void> {
   bustProductCaches(product.slug);
   revalidatePath("/admin/products");
 }
+
+/**
+ * Soft-delete a product. Sets deletedAt so the row vanishes from
+ * both the admin list and the storefront, but the data is preserved
+ * for order history / audit trails. Variants are kept by FK; the
+ * Order/OrderItem table retains its own snapshot of price+title.
+ */
+export async function deleteProductAction(formData: FormData): Promise<void> {
+  await requireRole("ADMIN");
+  const id = formData.get("id");
+  if (typeof id !== "string") return;
+  const product = await db.product.update({
+    where: { id },
+    data: { deletedAt: new Date(), status: "ARCHIVED" },
+  });
+  bustProductCaches(product.slug);
+  revalidatePath("/admin/products");
+}

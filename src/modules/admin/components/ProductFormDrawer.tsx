@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { createProductAction } from "@/modules/admin/actions/products";
 import { uploadToCloudinary } from "@/modules/admin/lib/upload";
+import { slugify } from "@/lib/utils";
 
 type Option = { id: string; name: string };
 
@@ -41,6 +42,31 @@ export function ProductFormDrawer({
     { sku: "", priceCents: 1999, inventoryQty: 10, attributes: { size: "M" } },
   ]);
   const [uploading, setUploading] = React.useState(false);
+
+  const [title, setTitle] = React.useState("");
+  const [slug, setSlug] = React.useState("");
+  const slugTouchedRef = React.useRef(false);
+
+  function onTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setTitle(v);
+    if (!slugTouchedRef.current) setSlug(slugify(v));
+  }
+
+  function onSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    slugTouchedRef.current = true;
+    setSlug(e.target.value);
+  }
+
+  function resetForm() {
+    setImages([]);
+    setVariants([
+      { sku: "", priceCents: 1999, inventoryQty: 10, attributes: { size: "M" } },
+    ]);
+    setTitle("");
+    setSlug("");
+    slugTouchedRef.current = false;
+  }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -77,23 +103,38 @@ export function ProductFormDrawer({
             const res = await createProductAction(fd);
             if (res.ok) {
               setOpen(false);
-              setImages([]);
-              setVariants([
-                {
-                  sku: "",
-                  priceCents: 1999,
-                  inventoryQty: 10,
-                  attributes: { size: "M" },
-                },
-              ]);
+              resetForm();
             } else {
               alert(res.error ?? "Failed");
             }
           }}
           className="grid gap-3 sm:grid-cols-2"
         >
-          <FormField name="title" label="Title" required />
-          <FormField name="slug" label="Slug" required />
+          <div className="space-y-1">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              name="title"
+              required
+              value={title}
+              onChange={onTitleChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="slug">Slug</Label>
+            <Input
+              id="slug"
+              name="slug"
+              required
+              value={slug}
+              onChange={onSlugChange}
+              pattern="^[a-z0-9-]+$"
+              title="Lowercase letters, numbers, and hyphens only"
+            />
+            <p className="text-xs text-muted-foreground">
+              Auto-filled from title. Edit to override.
+            </p>
+          </div>
           <FormField name="shortDescription" label="Short description" className="sm:col-span-2" />
           <div className="sm:col-span-2">
             <Label htmlFor="description">Description</Label>

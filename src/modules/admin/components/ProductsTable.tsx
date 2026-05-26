@@ -7,6 +7,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Archive, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -17,7 +18,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { archiveProductAction } from "@/modules/admin/actions/products";
+import {
+  archiveProductAction,
+  deleteProductAction,
+} from "@/modules/admin/actions/products";
 import { formatMoney } from "@/lib/utils";
 
 type Row = {
@@ -49,44 +53,96 @@ const columns = [
   col.accessor("inventory", { header: "Inventory" }),
   col.display({
     id: "actions",
-    header: "",
+    header: "Actions",
     cell: (info) => (
-      <form action={archiveProductAction}>
-        <input type="hidden" name="id" value={info.row.original.id} />
-        <Button type="submit" variant="ghost" size="sm">
-          Archive
-        </Button>
-      </form>
+      <RowActions id={info.row.original.id} title={info.row.original.title} />
     ),
   }),
 ];
 
-export function ProductsTable({ data }: { data: Row[] }) {
-  const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
+function RowActions({ id, title }: { id: string; title: string }) {
+  function confirmDelete(e: React.FormEvent<HTMLFormElement>) {
+    const ok = window.confirm(
+      `Delete "${title}"? This hides it from the store and from this list. Order history is preserved. You can recover it from the database if needed.`,
+    );
+    if (!ok) e.preventDefault();
+  }
+
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((hg) => (
-          <TableRow key={hg.id}>
-            {hg.headers.map((h) => (
-              <TableHead key={h.id}>
-                {flexRender(h.column.columnDef.header, h.getContext())}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="flex justify-end gap-2">
+      <form action={archiveProductAction}>
+        <input type="hidden" name="id" value={id} />
+        <Button
+          type="submit"
+          variant="outline"
+          size="sm"
+          title="Archive (hide from storefront, keep in list)"
+        >
+          <Archive className="mr-1 h-4 w-4" />
+          Archive
+        </Button>
+      </form>
+      <form action={deleteProductAction} onSubmit={confirmDelete}>
+        <input type="hidden" name="id" value={id} />
+        <Button
+          type="submit"
+          variant="destructive"
+          size="sm"
+          title="Delete (soft-delete; removes from list)"
+        >
+          <Trash2 className="mr-1 h-4 w-4" />
+          Delete
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+export function ProductsTable({ data }: { data: Row[] }) {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  if (data.length === 0) {
+    return (
+      <div className="p-8 text-center text-sm text-muted-foreground">
+        No products yet. Click <strong>New product</strong> above to add your
+        first one.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((h) => (
+                <TableHead
+                  key={h.id}
+                  className={h.id === "actions" ? "text-right" : undefined}
+                >
+                  {flexRender(h.column.columnDef.header, h.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
