@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
+import { ProductStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import { ProductFormDrawer, ProductsTable } from "@/modules/admin";
+import {
+  ProductFormDrawer,
+  ProductsTable,
+  ProductsFilterBar,
+} from "@/modules/admin";
 import { Button } from "@/components/ui/button";
 import { env } from "@/lib/env";
 import { safeFetch } from "@/lib/utils";
@@ -10,17 +15,66 @@ import { safeFetch } from "@/lib/utils";
 export const metadata: Metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
 
-type ProductWithVariant = Prisma.ProductGetPayload<{
-  include: { variants: true };
+type ProductRow = Prisma.ProductGetPayload<{
+  include: {
+    variants: true;
+    category: { select: { name: true } };
+    brand: { select: { name: true } };
+  };
 }>;
 
-export default async function AdminProductsPage() {
+type SearchParams = {
+  q?: string;
+  categoryId?: string;
+  brandId?: string;
+  status?: string;
+};
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function buildWhere(p: SearchParams): Prisma.ProductWhereInput {
+  const where: Prisma.ProductWhereInput = { deletedAt: null };
+  const q = p.q?.trim();
+  if (q) {
+    where.OR = [
+      { title: { contains: q, mode: "insensitive" } },
+      { slug: { contains: q, mode: "insensitive" } },
+    ];
+  }
+  if (p.categoryId && UUID_RE.test(p.categoryId)) {
+    where.categoryId = p.categoryId;
+  }
+  if (p.brandId && UUID_RE.test(p.brandId)) {
+    where.brandId = p.brandId;
+  }
+  if (
+    p.status &&
+    (Object.values(ProductStatus) as string[]).includes(p.status)
+  ) {
+    where.status = p.status as ProductStatus;
+  }
+  return where;
+}
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = await searchParams;
+  const where = buildWhere(sp);
+
   const [products, categories, brands] = await Promise.all([
-    safeFetch<ProductWithVariant[]>(
+    safeFetch<ProductRow[]>(
       () =>
         db.product.findMany({
-          where: { deletedAt: null },
-          include: { variants: { take: 1, orderBy: { priceCents: "asc" } } },
+          where,
+          include: {
+            variants: { take: 1, orderBy: { priceCents: "asc" } },
+            category: { select: { name: true } },
+            brand: { select: { name: true } },
+          },
           orderBy: { createdAt: "desc" },
           take: 200,
         }),
@@ -28,12 +82,20 @@ export default async function AdminProductsPage() {
       "admin:products",
     ),
     safeFetch(
-      () => db.category.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" } }),
+      () =>
+        db.category.findMany({
+          where: { deletedAt: null },
+          orderBy: { name: "asc" },
+        }),
       [],
       "admin:products:categories",
     ),
     safeFetch(
-      () => db.brand.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" } }),
+      () =>
+        db.brand.findMany({
+          where: { deletedAt: null },
+          orderBy: { name: "asc" },
+        }),
       [],
       "admin:products:brands",
     ),
@@ -44,11 +106,16 @@ export default async function AdminProductsPage() {
     title: p.title,
     slug: p.slug,
     status: p.status,
+    category: p.category?.name ?? "\u2014",
+    brand: p.brand?.name ?? "\u2014",
     priceCents: p.variants[0]?.priceCents ?? 0,
     inventory: p.variants.reduce((acc, v) => acc + v.inventoryQty, 0),
   }));
 
   const hasCategories = categories.length > 0;
+  const isFiltered = Boolean(
+    sp.q || sp.categoryId || sp.brandId || sp.status,
+  );
 
   return (
     <div className="space-y-6">
@@ -82,6 +149,18 @@ export default async function AdminProductsPage() {
           </p>
         </div>
       ) : null}
+
+      <ProductsFilterBar
+        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+        brands={brands.map((b) => ({ id: b.id, name: b.name }))}
+      />
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {rows.length} {rows.length === 1 ? "product" : "products"}
+          {isFiltered ? " match your filters" : ""}
+        </span>
+      </div>
 
       <div className="rounded-lg border bg-card">
         <ProductsTable data={rows} />

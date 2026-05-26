@@ -29,6 +29,8 @@ type Row = {
   title: string;
   slug: string;
   status: string;
+  category: string;
+  brand: string;
   priceCents: number;
   inventory: number;
 };
@@ -37,6 +39,8 @@ const col = createColumnHelper<Row>();
 
 const columns = [
   col.accessor("title", { header: "Title" }),
+  col.accessor("category", { header: "Category" }),
+  col.accessor("brand", { header: "Brand" }),
   col.accessor("slug", { header: "Slug" }),
   col.accessor("status", {
     header: "Status",
