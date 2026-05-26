@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, User } from "lucide-react";
+import { ShoppingBag, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getOptionalUser } from "@/modules/auth";
 import { getCartCount } from "@/modules/cart";
@@ -7,6 +7,7 @@ import { getCartCount } from "@/modules/cart";
 export async function Header() {
   const user = await getOptionalUser();
   const cartCount = await getCartCount();
+  const isAdmin = user?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
@@ -29,6 +30,14 @@ export async function Header() {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
+          {isAdmin ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin">
+                <LayoutDashboard className="mr-1 h-4 w-4" />
+                Admin
+              </Link>
+            </Button>
+          ) : null}
           {user ? (
             <Button asChild variant="ghost" size="sm">
               <Link href="/account">

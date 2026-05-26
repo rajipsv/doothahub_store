@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { requireRole } from "@/modules/auth";
 
+const NAV = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/products", label: "Products" },
+  { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/customers", label: "Customers" },
+];
+
 export default async function AdminLayout({
   children,
 }: {
@@ -9,29 +16,55 @@ export default async function AdminLayout({
   await requireRole("ADMIN");
   return (
     <div className="grid min-h-screen md:grid-cols-[220px_1fr]">
+      {/* Desktop sidebar */}
       <aside className="hidden border-r bg-card p-6 md:block">
         <Link href="/admin" className="mb-8 block text-lg font-bold">
           DoothaHub Admin
         </Link>
         <nav className="space-y-2 text-sm font-medium">
-          <Link href="/admin" className="block hover:underline">
-            Dashboard
-          </Link>
-          <Link href="/admin/products" className="block hover:underline">
-            Products
-          </Link>
-          <Link href="/admin/orders" className="block hover:underline">
-            Orders
-          </Link>
-          <Link href="/admin/customers" className="block hover:underline">
-            Customers
-          </Link>
-          <Link href="/" className="block hover:underline text-muted-foreground">
-            Back to store
+          {NAV.map((n) => (
+            <Link key={n.href} href={n.href} className="block hover:underline">
+              {n.label}
+            </Link>
+          ))}
+          <Link
+            href="/"
+            className="block pt-4 text-muted-foreground hover:underline"
+          >
+            ← Back to store
           </Link>
         </nav>
       </aside>
-      <main className="p-6">{children}</main>
+
+      <div className="flex flex-col">
+        {/* Mobile top bar — visible only on narrow screens where the sidebar is hidden */}
+        <header className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur md:hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <Link href="/admin" className="font-bold">
+              DoothaHub Admin
+            </Link>
+            <Link
+              href="/"
+              className="text-xs text-muted-foreground hover:underline"
+            >
+              ← Store
+            </Link>
+          </div>
+          <nav className="flex gap-1 overflow-x-auto border-t px-2 py-1 text-sm">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className="whitespace-nowrap rounded-md px-3 py-1.5 hover:bg-accent"
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
+
+        <main className="p-6">{children}</main>
+      </div>
     </div>
   );
 }
