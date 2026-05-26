@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Package, ShoppingCart, Users, Plus } from "lucide-react";
+import { Package, ShoppingCart, Users, Plus, Tag } from "lucide-react";
 import {
   getDashboardStats,
   getRevenueSeries,
@@ -20,9 +20,15 @@ const QUICK_ACTIONS = [
     icon: Package,
   },
   {
+    href: "/admin/categories",
+    label: "Categories",
+    desc: "Add categories before creating products.",
+    icon: Tag,
+  },
+  {
     href: "/admin/products",
     label: "Add new product",
-    desc: "Opens the product list \u2014 click 'New product' top-right.",
+    desc: "Opens product list; click 'New product' top-right.",
     icon: Plus,
   },
   {
