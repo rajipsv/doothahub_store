@@ -7,7 +7,7 @@ import {
 } from "@/modules/catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { addItemAction } from "@/modules/cart";
-import { absoluteUrl, formatMoney } from "@/lib/utils";
+import { absoluteUrl, formatMoney, safeFetch } from "@/lib/utils";
 
 // On-demand ISR: first request renders + caches, subsequent requests hit
 // the cache for `revalidate` seconds. Avoids slurping the whole catalog
@@ -21,7 +21,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getCachedProductBySlug(slug);
+  const product = await safeFetch(
+    () => getCachedProductBySlug(slug),
+    null,
+    `product:metadata:${slug}`,
+  );
   if (!product) return { title: "Not found" };
   return {
     title: product.seoTitle ?? product.title,
@@ -41,7 +45,11 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getCachedProductBySlug(slug);
+  const product = await safeFetch(
+    () => getCachedProductBySlug(slug),
+    null,
+    `product:${slug}`,
+  );
   if (!product) notFound();
 
   const variant = product.variants[0];

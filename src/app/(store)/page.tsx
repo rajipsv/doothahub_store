@@ -5,25 +5,14 @@ import {
   getCachedCategories,
   ProductGrid,
 } from "@/modules/catalog";
-import { logger } from "@/lib/logger";
+import { safeFetch } from "@/lib/utils";
 
 export const revalidate = 300;
 
-async function safeFetch<T>(fn: () => Promise<T>, fallback: T, label: string): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    logger.warn(`${label} failed on home page; showing empty state`, {
-      err: err instanceof Error ? err.message : String(err),
-    });
-    return fallback;
-  }
-}
-
 export default async function HomePage() {
   const [featured, categories] = await Promise.all([
-    safeFetch(() => getCachedFeaturedProducts(8), [], "getCachedFeaturedProducts"),
-    safeFetch(() => getCachedCategories(), [], "getCachedCategories"),
+    safeFetch(() => getCachedFeaturedProducts(8), [], "home:featured"),
+    safeFetch(() => getCachedCategories(), [], "home:categories"),
   ]);
 
   const hasContent = featured.length > 0 || categories.length > 0;

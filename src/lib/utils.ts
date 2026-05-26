@@ -27,3 +27,27 @@ export function absoluteUrl(path: string): string {
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   return new URL(path, base).toString();
 }
+
+/**
+ * Run an async data-fetch and fall back to a default value on failure.
+ * Used by public storefront pages so a transient infrastructure issue
+ * (DB tables not pushed yet, Neon paused, etc.) renders an empty state
+ * instead of crashing the whole route. The cause is logged to stderr so
+ * it still shows up in Vercel function logs for debugging.
+ *
+ * Do NOT use this in payment / checkout / admin paths where silent
+ * fallbacks would mask correctness bugs — let those errors surface.
+ */
+export async function safeFetch<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+  label: string,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[safeFetch] ${label} failed, using fallback:`, msg);
+    return fallback;
+  }
+}

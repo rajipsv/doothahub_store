@@ -6,6 +6,7 @@ import {
   productFiltersSchema,
   ProductGrid,
 } from "@/modules/catalog";
+import { safeFetch } from "@/lib/utils";
 
 export const revalidate = 300;
 
@@ -15,7 +16,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const cat = await getCachedCategoryBySlug(slug);
+  const cat = await safeFetch(
+    () => getCachedCategoryBySlug(slug),
+    null,
+    `category:metadata:${slug}`,
+  );
   if (!cat) return { title: "Not found" };
   return {
     title: cat.name,
@@ -40,10 +45,18 @@ export default async function CategoryPage({
   }
   const filters = productFiltersSchema.parse(flat);
 
-  const cat = await getCachedCategoryBySlug(slug);
+  const cat = await safeFetch(
+    () => getCachedCategoryBySlug(slug),
+    null,
+    `category:${slug}`,
+  );
   if (!cat) notFound();
 
-  const { items, total } = await listProductsForCategory(slug, filters);
+  const { items, total } = await safeFetch(
+    () => listProductsForCategory(slug, filters),
+    { items: [], total: 0 },
+    `category:${slug}:products`,
+  );
 
   return (
     <div className="container py-10">
@@ -51,7 +64,13 @@ export default async function CategoryPage({
         <h1 className="text-3xl font-bold tracking-tight">{cat.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{total} products</p>
       </header>
-      <ProductGrid products={items} />
+      {items.length === 0 ? (
+        <div className="rounded-lg border bg-card p-10 text-center text-sm text-muted-foreground">
+          No products in this category yet.
+        </div>
+      ) : (
+        <ProductGrid products={items} />
+      )}
     </div>
   );
 }

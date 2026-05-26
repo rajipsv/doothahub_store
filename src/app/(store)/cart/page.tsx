@@ -6,12 +6,29 @@ import {
   getCurrentCart,
 } from "@/modules/cart";
 import { Button } from "@/components/ui/button";
+import { safeFetch } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Your cart" };
 export const dynamic = "force-dynamic";
 
+const EMPTY_CART = {
+  id: "",
+  userId: null,
+  sessionKey: null,
+  couponCode: null,
+  currency: "INR",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  items: [] as never[],
+  subtotalCents: 0,
+  taxCents: 0,
+  shippingCents: 0,
+  discountCents: 0,
+  totalCents: 0,
+};
+
 export default async function CartPage() {
-  const cart = await getCurrentCart();
+  const cart = await safeFetch(() => getCurrentCart(), EMPTY_CART, "cart:current");
 
   if (cart.items.length === 0) {
     return (

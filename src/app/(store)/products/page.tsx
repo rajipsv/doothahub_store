@@ -6,6 +6,7 @@ import {
   ProductGrid,
   getCachedCategories,
 } from "@/modules/catalog";
+import { safeFetch } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "All products" };
 export const revalidate = 60;
@@ -26,8 +27,12 @@ export default async function ProductsPage({
 
   const filters = productFiltersSchema.parse(flat);
   const [{ items, total }, categories] = await Promise.all([
-    listProducts(filters),
-    getCachedCategories(),
+    safeFetch(
+      () => listProducts(filters),
+      { items: [], total: 0 },
+      "products:list",
+    ),
+    safeFetch(() => getCachedCategories(), [], "products:categories"),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / filters.pageSize));
@@ -104,7 +109,21 @@ export default async function ProductsPage({
             <h1 className="text-2xl font-bold tracking-tight">All products</h1>
             <p className="text-sm text-muted-foreground">{total} items</p>
           </div>
-          <ProductGrid products={items} />
+
+          {items.length === 0 ? (
+            <div className="rounded-lg border bg-card p-10 text-center">
+              <p className="text-lg font-semibold">No products yet</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The catalogue is empty. Seed demo data with
+                {" "}
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">pnpm db:seed</code>
+                {" "}
+                or add products from the admin dashboard.
+              </p>
+            </div>
+          ) : (
+            <ProductGrid products={items} />
+          )}
 
           {totalPages > 1 ? (
             <nav className="mt-8 flex items-center justify-center gap-2">
