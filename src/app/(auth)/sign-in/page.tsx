@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { SignInForm } from "@/modules/auth";
+import { SignInForm, AuthHealthNotice } from "@/modules/auth";
 
 export const metadata: Metadata = { title: "Sign in" };
+export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
   return (
@@ -12,6 +13,7 @@ export default function SignInPage() {
           Sign in to continue shopping.
         </p>
       </div>
+      <AuthHealthNotice />
       <SignInForm />
     </div>
   );

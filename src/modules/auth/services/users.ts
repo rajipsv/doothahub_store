@@ -7,8 +7,24 @@ export async function findUserByEmail(email: string) {
   return db.user.findUnique({ where: { email: email.toLowerCase() } });
 }
 
+/**
+ * Returns the user when credentials match, null when they don't,
+ * and null (with a log) when something *infrastructural* breaks
+ * (DB unreachable, users table missing, etc.). Auth.js treats any
+ * thrown error from `authorize` as a 500 — for sign-in we always
+ * want a clean "invalid credentials" instead.
+ */
 export async function verifyCredentials(email: string, password: string) {
-  const user = await findUserByEmail(email);
+  let user: Awaited<ReturnType<typeof findUserByEmail>> = null;
+  try {
+    user = await findUserByEmail(email);
+  } catch (err) {
+    console.warn(
+      "[auth] verifyCredentials: lookup failed (DB issue?)",
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
   if (!user || !user.passwordHash) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return null;

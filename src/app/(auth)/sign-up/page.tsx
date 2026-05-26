@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { SignUpForm } from "@/modules/auth";
+import { SignUpForm, AuthHealthNotice } from "@/modules/auth";
 
 export const metadata: Metadata = { title: "Create an account" };
+export const dynamic = "force-dynamic";
 
 export default function SignUpPage() {
   return (
@@ -12,6 +13,7 @@ export default function SignUpPage() {
           Start shopping in seconds.
         </p>
       </div>
+      <AuthHealthNotice />
       <SignUpForm />
     </div>
   );

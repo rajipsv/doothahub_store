@@ -33,17 +33,31 @@ const providers: NextAuthConfig["providers"] = [
       password: { label: "Password", type: "password" },
     },
     async authorize(raw) {
-      const parsed = signInSchema.safeParse(raw);
-      if (!parsed.success) return null;
-      const user = await verifyCredentials(parsed.data.email, parsed.data.password);
-      if (!user) return null;
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name ?? null,
-        image: user.image ?? null,
-        role: user.role,
-      };
+      try {
+        const parsed = signInSchema.safeParse(raw);
+        if (!parsed.success) return null;
+        const user = await verifyCredentials(
+          parsed.data.email,
+          parsed.data.password,
+        );
+        if (!user) return null;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          image: user.image ?? null,
+          role: user.role,
+        };
+      } catch (err) {
+        // Any throw inside authorize() turns into a 500 on
+        // /api/auth/callback/credentials. Always degrade to "no user found"
+        // and log the cause for debugging in Vercel function logs.
+        console.warn(
+          "[auth] credentials authorize() failed",
+          err instanceof Error ? err.message : err,
+        );
+        return null;
+      }
     },
   }),
 ];
