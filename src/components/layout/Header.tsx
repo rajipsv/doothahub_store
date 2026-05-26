@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ShoppingBag, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getOptionalUser } from "@/modules/auth";
+import { getOptionalUser, SignOutButton } from "@/modules/auth";
 import { getCartCount } from "@/modules/cart";
 
 export async function Header() {
@@ -39,12 +39,15 @@ export async function Header() {
             </Button>
           ) : null}
           {user ? (
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/account">
-                <User className="mr-1 h-4 w-4" />
-                Account
-              </Link>
-            </Button>
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/account">
+                  <User className="mr-1 h-4 w-4" />
+                  Account
+                </Link>
+              </Button>
+              <SignOutButton />
+            </>
           ) : (
             <Button asChild variant="ghost" size="sm">
               <Link href="/sign-in">Sign in</Link>

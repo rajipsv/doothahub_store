@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireRole } from "@/modules/auth";
+import { requireRole, SignOutButton } from "@/modules/auth";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
@@ -33,6 +33,9 @@ export default async function AdminLayout({
           >
             ← Back to store
           </Link>
+          <div className="pt-2">
+            <SignOutButton variant="link" />
+          </div>
         </nav>
       </aside>
 
@@ -43,12 +46,15 @@ export default async function AdminLayout({
             <Link href="/admin" className="font-bold">
               DoothaHub Admin
             </Link>
-            <Link
-              href="/"
-              className="text-xs text-muted-foreground hover:underline"
-            >
-              ← Store
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="text-xs text-muted-foreground hover:underline"
+              >
+                ← Store
+              </Link>
+              <SignOutButton variant="link" label="Sign out" showIcon={false} />
+            </div>
           </div>
           <nav className="flex gap-1 overflow-x-auto border-t px-2 py-1 text-sm">
             {NAV.map((n) => (

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { requireUser } from "@/modules/auth";
+import { requireUser, SignOutButton } from "@/modules/auth";
 
 export default async function AccountLayout({
   children,
@@ -24,6 +24,9 @@ export default async function AccountLayout({
             <Link href="/account/addresses" className="block hover:underline">
               Addresses
             </Link>
+            <div className="pt-4">
+              <SignOutButton variant="link" />
+            </div>
           </nav>
           <main>{children}</main>
         </div>
