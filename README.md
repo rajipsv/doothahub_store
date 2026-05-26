@@ -170,9 +170,16 @@ cloudflared tunnel --url http://localhost:3000
 ## Deployment
 
 1. Push to GitHub.
-2. Import to Vercel. Set all env vars from `.env.example`.
-3. In the Razorpay dashboard, add a webhook for `https://<your-domain>/api/webhooks/razorpay`. Paste its secret into `RAZORPAY_WEBHOOK_SECRET`.
-4. Run `pnpm db:deploy` once against the production `DIRECT_URL`.
+2. Import to Vercel. **The only env var you need to ship the storefront is `DATABASE_URL`** (a Neon Postgres URL — pooled or direct, the deploy script handles both).
+3. The Vercel build runs `scripts/vercel-deploy.mjs` which:
+   - Auto-derives `DIRECT_URL` from `DATABASE_URL` (strips `-pooler` and `pgbouncer=true` for the Prisma DDL connection).
+   - Runs `prisma db push` so the tables exist (idempotent — no-op on subsequent deploys).
+   - Runs `prisma/seed.ts` once (idempotent — bails out if any products already exist).
+   - Runs `next build`.
+4. Add `AUTH_SECRET` when you want sign-in to work. Add `RAZORPAY_*` when you want payments. Add `RESEND_*` for confirmation emails. (See the env-vars-by-goal table above.)
+5. For Razorpay, add a webhook in their dashboard pointing at `https://<your-domain>/api/webhooks/razorpay` and paste its secret into `RAZORPAY_WEBHOOK_SECRET`.
+
+> **Disable auto-seed:** set `SEED_ON_DEPLOY=false` in the Vercel env vars if you don't want the demo data inserted on first deploy.
 
 ## Architecture decisions
 

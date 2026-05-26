@@ -4,6 +4,13 @@ import bcrypt from "bcryptjs";
 const db = new PrismaClient();
 
 async function main() {
+  // Idempotent: skip if a non-trivial amount of data already exists. Makes
+  // it safe to run on every Vercel deploy without re-seeding production.
+  const existingProducts = await db.product.count();
+  if (existingProducts > 0) {
+    console.log(`Seed skipped — ${existingProducts} products already in DB.`);
+    return;
+  }
   console.log("Seeding...");
 
   const adminPassword = await bcrypt.hash("Admin123!", 10);
