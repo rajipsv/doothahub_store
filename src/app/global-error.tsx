@@ -35,6 +35,10 @@ export default function GlobalError({
             Error digest: <span style={{ userSelect: "all" }}>{error.digest}</span>
           </p>
         ) : null}
+        {/* Intentionally a plain <a> for a hard reload — `global-error` runs
+            when the root layout itself failed, so Next/Link's client router
+            may not be safe to use. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/"
           style={{
