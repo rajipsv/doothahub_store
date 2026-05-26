@@ -5,9 +5,47 @@ import { requireRole } from "@/modules/auth";
 import { db } from "@/lib/db";
 import { productCreateSchema } from "@/modules/catalog";
 import { bustProductCaches } from "@/lib/cache";
+import { slugify } from "@/lib/utils";
+
+/**
+ * Resolve a free-text brand name to a brand id.
+ *
+ * - Empty string  -> undefined (brand is optional on a product).
+ * - Existing match (case-insensitive) -> reuse the row.
+ * - Otherwise create a new brand, auto-deduplicating the slug if needed.
+ */
+async function resolveBrandId(input: unknown): Promise<string | undefined> {
+  if (typeof input !== "string") return undefined;
+  const name = input.trim();
+  if (!name) return undefined;
+
+  const existing = await db.brand.findFirst({
+    where: {
+      deletedAt: null,
+      name: { equals: name, mode: "insensitive" },
+    },
+  });
+  if (existing) return existing.id;
+
+  const base = slugify(name) || "brand";
+  let slug = base;
+  for (let i = 2; i < 50; i++) {
+    try {
+      const created = await db.brand.create({ data: { name, slug } });
+      return created.id;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/Unique|unique/.test(msg)) throw err;
+      slug = `${base}-${i}`;
+    }
+  }
+  throw new Error("Could not allocate a unique slug for the new brand");
+}
 
 export async function createProductAction(formData: FormData) {
   await requireRole("ADMIN");
+
+  const brandId = await resolveBrandId(formData.get("brand"));
 
   const raw = {
     title: formData.get("title"),
@@ -15,7 +53,7 @@ export async function createProductAction(formData: FormData) {
     description: formData.get("description"),
     shortDescription: formData.get("shortDescription") || undefined,
     categoryId: formData.get("categoryId"),
-    brandId: formData.get("brandId") || undefined,
+    brandId,
     status: formData.get("status") ?? "DRAFT",
     seoTitle: formData.get("seoTitle") || undefined,
     seoDescription: formData.get("seoDescription") || undefined,

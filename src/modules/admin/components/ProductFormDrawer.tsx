@@ -162,20 +162,23 @@ export function ProductFormDrawer({
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="brandId">Brand</Label>
-            <Select name="brandId">
-              <SelectTrigger>
-                <SelectValue placeholder="Select brand" />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-1">
+            <Label htmlFor="brand">Brand (optional)</Label>
+            <Input
+              id="brand"
+              name="brand"
+              list="brand-suggestions"
+              placeholder="Pick existing or type a new brand"
+              autoComplete="off"
+            />
+            <datalist id="brand-suggestions">
+              {brands.map((b) => (
+                <option key={b.id} value={b.name} />
+              ))}
+            </datalist>
+            <p className="text-xs text-muted-foreground">
+              Start typing to see suggestions. New brands are created automatically.
+            </p>
           </div>
 
           <div>
