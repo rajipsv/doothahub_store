@@ -19,12 +19,21 @@ export default function RootError({ error, reset }: Props) {
   const isMissingTable =
     /relation .* does not exist/i.test(message) ||
     /table .* does not exist/i.test(message) ||
-    /P2021/i.test(message);
+    /P2021/i.test(message) ||
+    /does not exist in the current database/i.test(message);
 
   const isDbConnection =
     /Can't reach database server/i.test(message) ||
     /ECONNREFUSED/i.test(message) ||
-    /Tenant or user not found/i.test(message);
+    /Tenant or user not found/i.test(message) ||
+    /Connection terminated/i.test(message) ||
+    /P1001/i.test(message);
+
+  const isMissingAuthSecret =
+    /MissingSecret/i.test(message) ||
+    /NEXTAUTH_SECRET/i.test(message) ||
+    /AUTH_SECRET/i.test(message) ||
+    /Please define a `secret`/i.test(message);
 
   const isMissingEnv =
     /Environment variable not found: DATABASE_URL/i.test(message) ||
@@ -57,6 +66,17 @@ export default function RootError({ error, reset }: Props) {
             "Confirm DATABASE_URL is set in your Vercel env vars.",
             "For Neon, use the POOLED URL (host contains 'pooler') with ?sslmode=require.",
             "Make sure the Neon project isn't paused (free tier sleeps after inactivity).",
+          ]}
+        />
+      ) : isMissingAuthSecret ? (
+        <Diagnosis
+          title="AUTH_SECRET is not set"
+          hint="Auth.js refuses to run in production without a signing secret. Sign-in / sign-up routes will 500 until you set it."
+          steps={[
+            "Generate a 32+ char secret. macOS / Linux:  openssl rand -base64 32",
+            "Windows PowerShell:  [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))",
+            "Add AUTH_SECRET to Vercel env vars (Production, Preview, Development).",
+            "Redeploy.",
           ]}
         />
       ) : isMissingEnv ? (
