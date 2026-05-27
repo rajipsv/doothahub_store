@@ -1,0 +1,5 @@
+title,slug,description,shortDescription,category,brand,status,price,comparePrice,inventory,sku,size,imageUrl
+Classic Cotton T-Shirt,classic-cotton-t-shirt,A premium 100% cotton t-shirt designed for everyday comfort. Pre-shrunk and machine washable.,Comfortable everyday tee,Apparel,Acme,ACTIVE,999,1499,50,CCT-M,M,https://images.unsplash.com/photo-1521572163474-6864f9cf17ab
+Classic Cotton T-Shirt,classic-cotton-t-shirt,A premium 100% cotton t-shirt designed for everyday comfort. Pre-shrunk and machine washable.,Comfortable everyday tee,Apparel,Acme,ACTIVE,999,1499,30,CCT-L,L,
+Running Shoes Pro,running-shoes-pro,High-performance running shoes with carbon-plate midsole and breathable mesh upper.,Built for distance,Footwear,Globex,ACTIVE,4999,5999,25,RSP-9,9,https://images.unsplash.com/photo-1542291026-7eec264c27ff
+Leather Wallet,leather-wallet,Handcrafted full-grain leather wallet with RFID protection and 8 card slots.,Slim everyday wallet,Accessories,,ACTIVE,1499,1999,40,LW-1,One Size,

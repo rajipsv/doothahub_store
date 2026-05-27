@@ -9,6 +9,11 @@ export {
   deleteProductAction,
 } from "@/modules/admin/actions/products";
 export {
+  importProductsAction,
+  type ImportSummary,
+  type ImportRowResult,
+} from "@/modules/admin/actions/import-products";
+export {
   markShippedAction,
   refundOrderAction,
 } from "@/modules/admin/actions/orders";
@@ -26,4 +31,5 @@ export { ProductsFilterBar } from "@/modules/admin/components/ProductsFilterBar"
 export { OrdersTable } from "@/modules/admin/components/OrdersTable";
 export { CustomersTable } from "@/modules/admin/components/CustomersTable";
 export { ProductFormDrawer } from "@/modules/admin/components/ProductFormDrawer";
+export { ProductImportForm } from "@/modules/admin/components/ProductImportForm";
 export { TaxonomyManager } from "@/modules/admin/components/TaxonomyManager";

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { ProductStatus } from "@prisma/client";
+import { Upload } from "lucide-react";
 import { db } from "@/lib/db";
 import {
   ProductFormDrawer,
@@ -121,20 +122,33 @@ export default async function AdminProductsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-        {hasCategories ? (
-          <ProductFormDrawer
-            categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-            brands={brands.map((b) => ({ id: b.id, name: b.name }))}
-            cloudinary={{
-              cloudName: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? null,
-              apiKey: process.env.CLOUDINARY_API_KEY ?? null,
-            }}
-          />
-        ) : (
-          <Button asChild>
-            <Link href="/admin/categories">Add your first category</Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasCategories ? (
+            <>
+              <Button asChild variant="outline">
+                <Link href="/admin/products/import">
+                  <Upload className="mr-1 h-4 w-4" />
+                  Import CSV
+                </Link>
+              </Button>
+              <ProductFormDrawer
+                categories={categories.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                }))}
+                brands={brands.map((b) => ({ id: b.id, name: b.name }))}
+                cloudinary={{
+                  cloudName: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? null,
+                  apiKey: process.env.CLOUDINARY_API_KEY ?? null,
+                }}
+              />
+            </>
+          ) : (
+            <Button asChild>
+              <Link href="/admin/categories">Add your first category</Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {!hasCategories ? (

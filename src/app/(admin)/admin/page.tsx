@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Package, ShoppingCart, Users, Plus, Tag } from "lucide-react";
+import { Package, ShoppingCart, Users, Plus, Tag, Upload } from "lucide-react";
 import {
   getDashboardStats,
   getRevenueSeries,
@@ -30,6 +30,12 @@ const QUICK_ACTIONS = [
     label: "Add new product",
     desc: "Opens product list; click 'New product' top-right.",
     icon: Plus,
+  },
+  {
+    href: "/admin/products/import",
+    label: "Bulk import (CSV)",
+    desc: "Upload an Excel/CSV to create many products at once.",
+    icon: Upload,
   },
   {
     href: "/admin/orders",
