@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   importProductsAction,
   type ImportSummary,
-} from "@/modules/admin";
+} from "@/modules/admin/actions/import-products";
 
 export function ProductImportForm() {
   const [summary, setSummary] = React.useState<ImportSummary | null>(null);
