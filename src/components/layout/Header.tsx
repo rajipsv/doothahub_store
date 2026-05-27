@@ -10,14 +10,14 @@ export async function Header() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
       <div className="container grid h-16 grid-cols-[1fr_auto_1fr] items-center">
         <div aria-hidden className="min-w-0" />
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight justify-self-center"
+          className="font-display justify-self-center text-xl font-bold tracking-tight"
         >
-          DoothaHub
+          <span className="text-gradient-tech">DoothaHub</span>
         </Link>
         <div className="flex min-w-0 items-center justify-end gap-2">
           {isAdmin ? (

@@ -2,10 +2,12 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t bg-muted/30">
+    <footer className="mt-16 border-t border-white/10 bg-muted/40">
       <div className="container grid gap-8 py-12 md:grid-cols-4">
         <div>
-          <p className="text-lg font-bold">DoothaHub Store</p>
+          <p className="font-display text-lg font-bold">
+            <span className="text-gradient-tech">DoothaHub</span>
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Modern e-commerce, built for performance.
           </p>

@@ -47,6 +47,47 @@
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
   }
+
+  /* Storefront: dark tech palette (cyan + violet accents) */
+  .storefront.dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+    --card: 222 40% 8%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 40% 8%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 187 92% 48%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 260 40% 14%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 215 20% 58%;
+    --accent: 260 55% 22%;
+    --accent-foreground: 210 40% 96%;
+    --border: 222 25% 16%;
+    --input: 222 25% 16%;
+    --ring: 187 92% 48%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer utilities {
+  .store-grid-bg {
+    background-image:
+      linear-gradient(to right, hsl(222 25% 14% / 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(222 25% 14% / 0.4) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .text-gradient-tech {
+    @apply bg-gradient-to-r from-cyan-400 via-sky-300 to-violet-400 bg-clip-text text-transparent;
+  }
+
+  .glow-primary {
+    box-shadow:
+      0 0 24px hsl(187 92% 48% / 0.35),
+      0 0 64px hsl(260 80% 60% / 0.12);
+  }
 }
 
 @layer base {
