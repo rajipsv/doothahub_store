@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { ProductStatus } from "@prisma/client";
 import { requireRole } from "@/modules/auth";
 import { db } from "@/lib/db";
-import { slugify } from "@/lib/utils";
+import { buildVariantSku, slugify } from "@/lib/utils";
 
 export type ImportRowResult = {
   row: number;
@@ -82,6 +82,26 @@ function parseInt0(v: string | undefined, field: string): number {
     throw new Error(`${field} must be a non-negative integer`);
   }
   return n;
+}
+
+async function allocateUniqueSku(slug: string, size: string): Promise<string> {
+  let suffix: number | undefined;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = buildVariantSku(slug, size, suffix);
+    if (!candidate) {
+      throw new Error(
+        "sku is required: provide a sku column or a valid slug + size",
+      );
+    }
+    const existing = await db.productVariant.findUnique({
+      where: { sku: candidate },
+    });
+    if (!existing) return candidate;
+    suffix = suffix === undefined ? 2 : suffix + 1;
+  }
+  throw new Error(
+    `Could not allocate a unique SKU for slug "${slug}" and size "${size}"`,
+  );
 }
 
 async function resolveBrandIdByName(
@@ -215,9 +235,9 @@ export async function importProductsAction(
         ? parseRupeesToPaise(compareRaw, "comparePrice")
         : null;
       const inventoryQty = parseInt0(r.inventory, "inventory");
-      const sku = (r.sku ?? "").trim();
-      if (!sku) throw new Error("sku is required");
       const size = (r.size ?? "").trim() || "Default";
+      let sku = (r.sku ?? "").trim();
+      if (!sku) sku = await allocateUniqueSku(slug, size);
 
       const existing = await db.product.findUnique({ where: { slug } });
 

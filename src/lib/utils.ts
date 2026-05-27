@@ -22,6 +22,38 @@ export function slugify(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Normalise a variant size label for use in a SKU (uppercase, hyphen-separated). */
+export function normalizeSizeForSku(size: string): string {
+  const normalized = size
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return normalized || "DEFAULT";
+}
+
+/**
+ * Build a stock-keeping unit from product slug + variant size.
+ * Matches the seed script pattern: `DEMO-PRODUCT-1-M`.
+ * @param suffix When set (e.g. 2), appends `-2` for duplicate sizes in the same product.
+ */
+export function buildVariantSku(
+  slug: string,
+  size: string,
+  suffix?: number,
+): string {
+  const baseSlug = slug
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (!baseSlug) return "";
+
+  const base = `${baseSlug}-${normalizeSizeForSku(size)}`;
+  if (suffix != null && suffix > 1) return `${base}-${suffix}`;
+  return base;
+}
+
 export function absoluteUrl(path: string): string {
   const base =
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

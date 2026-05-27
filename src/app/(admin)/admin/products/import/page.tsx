@@ -65,9 +65,8 @@ export default async function ImportProductsPage() {
             <strong>One row per variant.</strong> Two rows with the same{" "}
             <code>slug</code> become two variants (e.g. sizes M and L) of the
             same product. The first row provides the title/description/category;
-            later rows only need the variant fields ({" "}
-            <code>sku</code>, <code>size</code>, <code>price</code>,{" "}
-            <code>inventory</code>).
+            later rows only need the variant fields (<code>size</code>,{" "}
+            <code>price</code>, <code>inventory</code>; <code>sku</code> optional).
           </li>
           <li>
             <strong>Prices are in rupees</strong> (e.g. <code>999</code> means
@@ -97,8 +96,11 @@ export default async function ImportProductsPage() {
             <code>ACTIVE</code> to publish to the storefront.
           </li>
           <li>
-            <strong>Each SKU must be unique.</strong> Rows with a SKU that
-            already exists are skipped (not errored).
+            <strong>SKU is optional</strong> when <code>slug</code> (or{" "}
+            <code>title</code>) and <code>size</code> are set — it auto-generates
+            as <code>SLUG-SIZE</code> (e.g. <code>CLASSIC-T-SHIRT-M</code>).
+            Provide <code>sku</code> yourself to override. Each SKU must be unique;
+            duplicates are skipped (not errored).
           </li>
           <li>
             <strong>imageUrl</strong> is a single URL for the product{"\u2019"}s

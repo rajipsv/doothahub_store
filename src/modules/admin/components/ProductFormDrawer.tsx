@@ -20,9 +20,48 @@ import {
 } from "@/components/ui/select";
 import { createProductAction } from "@/modules/admin/actions/products";
 import { uploadToCloudinary } from "@/modules/admin/lib/upload";
-import { slugify } from "@/lib/utils";
+import { buildVariantSku, slugify } from "@/lib/utils";
 
 type Option = { id: string; name: string };
+
+type VariantRow = {
+  sku: string;
+  priceCents: number;
+  inventoryQty: number;
+  attributes: { size: string };
+};
+
+const DEFAULT_VARIANT: VariantRow = {
+  sku: "",
+  priceCents: 1999,
+  inventoryQty: 10,
+  attributes: { size: "M" },
+};
+
+function applyAutoSkus(
+  productSlug: string,
+  rows: VariantRow[],
+  skuTouched: boolean[],
+): VariantRow[] {
+  if (!productSlug.trim()) return rows;
+
+  const seen = new Map<string, number>();
+  return rows.map((row, idx) => {
+    if (skuTouched[idx]) return row;
+
+    const base = buildVariantSku(productSlug, row.attributes.size ?? "");
+    if (!base) return row;
+
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    const sku = buildVariantSku(
+      productSlug,
+      row.attributes.size ?? "",
+      count > 0 ? count + 1 : undefined,
+    );
+    return { ...row, sku };
+  });
+}
 
 export function ProductFormDrawer({
   categories,
@@ -38,34 +77,44 @@ export function ProductFormDrawer({
 }) {
   const [open, setOpen] = React.useState(false);
   const [images, setImages] = React.useState<{ url: string }[]>([]);
-  const [variants, setVariants] = React.useState([
-    { sku: "", priceCents: 1999, inventoryQty: 10, attributes: { size: "M" } },
+  const [variants, setVariants] = React.useState<VariantRow[]>([
+    { ...DEFAULT_VARIANT },
   ]);
   const [uploading, setUploading] = React.useState(false);
 
   const [title, setTitle] = React.useState("");
   const [slug, setSlug] = React.useState("");
   const slugTouchedRef = React.useRef(false);
+  const skuTouchedRef = React.useRef<boolean[]>([false]);
+
+  function syncVariantsSkus(nextSlug: string, rows: VariantRow[]) {
+    return applyAutoSkus(nextSlug, rows, skuTouchedRef.current);
+  }
 
   function onTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value;
     setTitle(v);
-    if (!slugTouchedRef.current) setSlug(slugify(v));
+    if (!slugTouchedRef.current) {
+      const nextSlug = slugify(v);
+      setSlug(nextSlug);
+      setVariants((prev) => syncVariantsSkus(nextSlug, prev));
+    }
   }
 
   function onSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
     slugTouchedRef.current = true;
-    setSlug(e.target.value);
+    const nextSlug = e.target.value;
+    setSlug(nextSlug);
+    setVariants((prev) => syncVariantsSkus(nextSlug, prev));
   }
 
   function resetForm() {
     setImages([]);
-    setVariants([
-      { sku: "", priceCents: 1999, inventoryQty: 10, attributes: { size: "M" } },
-    ]);
+    setVariants([{ ...DEFAULT_VARIANT }]);
     setTitle("");
     setSlug("");
     slugTouchedRef.current = false;
+    skuTouchedRef.current = [false];
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -213,13 +262,33 @@ export function ProductFormDrawer({
 
           <div className="sm:col-span-2 space-y-3 rounded-md border p-3">
             <p className="text-sm font-semibold">Variants</p>
+            <p className="text-xs text-muted-foreground">
+              SKU auto-fills from slug + size. Edit SKU to override.
+            </p>
             {variants.map((v, idx) => (
               <div key={idx} className="grid grid-cols-4 gap-2">
+                <input
+                  placeholder="Size"
+                  className="h-9 rounded-md border bg-background px-2 text-sm"
+                  value={v.attributes.size}
+                  onChange={(e) => {
+                    const next = [...variants];
+                    next[idx] = {
+                      ...v,
+                      attributes: { ...v.attributes, size: e.target.value },
+                    };
+                    setVariants(syncVariantsSkus(slug, next));
+                  }}
+                />
                 <input
                   placeholder="SKU"
                   className="h-9 rounded-md border bg-background px-2 text-sm"
                   value={v.sku}
                   onChange={(e) => {
+                    const touched = [...skuTouchedRef.current];
+                    while (touched.length <= idx) touched.push(false);
+                    touched[idx] = true;
+                    skuTouchedRef.current = touched;
                     const next = [...variants];
                     next[idx] = { ...v, sku: e.target.value };
                     setVariants(next);
@@ -247,31 +316,25 @@ export function ProductFormDrawer({
                     setVariants(next);
                   }}
                 />
-                <input
-                  placeholder="Size"
-                  className="h-9 rounded-md border bg-background px-2 text-sm"
-                  value={v.attributes.size}
-                  onChange={(e) => {
-                    const next = [...variants];
-                    next[idx] = {
-                      ...v,
-                      attributes: { ...v.attributes, size: e.target.value },
-                    };
-                    setVariants(next);
-                  }}
-                />
               </div>
             ))}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                setVariants((cur) => [
-                  ...cur,
-                  { sku: "", priceCents: 1999, inventoryQty: 10, attributes: { size: "M" } },
-                ])
-              }
+              onClick={() => {
+                skuTouchedRef.current = [...skuTouchedRef.current, false];
+                setVariants((cur) => {
+                  const next = [
+                    ...cur,
+                    {
+                      ...DEFAULT_VARIANT,
+                      attributes: { size: "L" },
+                    },
+                  ];
+                  return syncVariantsSkus(slug, next);
+                });
+              }}
             >
               Add variant
             </Button>

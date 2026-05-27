@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, formatMoney, slugify } from "@/lib/utils";
+import { buildVariantSku, cn, formatMoney, slugify } from "@/lib/utils";
 
 describe("lib/utils", () => {
   it("cn merges classes deduping tailwind conflicts", () => {
@@ -18,5 +18,19 @@ describe("lib/utils", () => {
   it("slugify normalises strings", () => {
     expect(slugify("Hello World!")).toBe("hello-world");
     expect(slugify("  many   spaces  ")).toBe("many-spaces");
+  });
+
+  it("buildVariantSku combines slug and size like the seed script", () => {
+    expect(buildVariantSku("classic-t-shirt", "M")).toBe("CLASSIC-T-SHIRT-M");
+    expect(buildVariantSku("classic-t-shirt", "One Size")).toBe(
+      "CLASSIC-T-SHIRT-ONE-SIZE",
+    );
+    expect(buildVariantSku("classic-t-shirt", "M", 2)).toBe(
+      "CLASSIC-T-SHIRT-M-2",
+    );
+  });
+
+  it("buildVariantSku returns empty when slug is missing", () => {
+    expect(buildVariantSku("", "M")).toBe("");
   });
 });
