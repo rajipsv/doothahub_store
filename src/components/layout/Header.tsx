@@ -11,25 +11,15 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight">
+      <div className="container grid h-16 grid-cols-[1fr_auto_1fr] items-center">
+        <div aria-hidden className="min-w-0" />
+        <Link
+          href="/"
+          className="text-xl font-bold tracking-tight justify-self-center"
+        >
           DoothaHub
         </Link>
-        <nav className="hidden gap-6 text-sm font-medium md:flex">
-          <Link href="/products" className="hover:text-primary">
-            Shop
-          </Link>
-          <Link href="/categories/apparel" className="hover:text-primary">
-            Apparel
-          </Link>
-          <Link href="/categories/footwear" className="hover:text-primary">
-            Footwear
-          </Link>
-          <Link href="/categories/accessories" className="hover:text-primary">
-            Accessories
-          </Link>
-        </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-2">
           {isAdmin ? (
             <Button asChild variant="ghost" size="sm">
               <Link href="/admin">
