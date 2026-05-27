@@ -11,11 +11,11 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-      <div className="container grid h-16 grid-cols-[1fr_auto_1fr] items-center">
+      <div className="container grid h-[4.5rem] grid-cols-[1fr_auto_1fr] items-center md:h-20">
         <div aria-hidden className="min-w-0" />
         <Link
           href="/"
-          className="font-display justify-self-center text-xl font-bold tracking-tight"
+          className="font-display justify-self-center text-2xl font-bold tracking-tight md:text-3xl"
         >
           <span className="text-gradient-tech">DoothaHub</span>
         </Link>
