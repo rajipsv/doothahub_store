@@ -130,7 +130,16 @@ export async function importProductImagesAction(
           `invalid slug "${slug}" (lowercase letters, numbers, hyphens only)`,
         );
       }
-      if (!imageUrlRaw) throw new Error("imageUrl is required");
+      if (!imageUrlRaw) {
+        summary.skipped += 1;
+        summary.rows.push({
+          row: rowNumber,
+          status: "skipped",
+          message: "No imageUrl — fill and re-import to update this product",
+          productSlug: slug,
+        });
+        continue;
+      }
 
       const imageUrl = parseImageUrl(imageUrlRaw);
       const position = parsePosition(r.position);

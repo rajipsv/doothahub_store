@@ -4,6 +4,11 @@ export {
   listCustomers,
 } from "@/modules/admin/services/dashboard";
 export {
+  listProductImageCsvRows,
+  serializeProductImagesCsv,
+  type ProductImageCsvRow,
+} from "@/modules/admin/services/export-product-images-csv";
+export {
   createProductAction,
   archiveProductAction,
   deleteProductAction,

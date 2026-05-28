@@ -29,17 +29,18 @@ export default function UpdateProductImagesPage() {
       <div className="rounded-lg border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-semibold">CSV template</p>
+            <p className="font-semibold">Export / fill / import</p>
             <p className="text-sm text-muted-foreground">
-              One row per product. Required: <code>slug</code>,{" "}
-              <code>imageUrl</code>. Optional: <code>alt</code>,{" "}
-              <code>position</code> (default 0).
+              Download lists every product from your database. Existing image
+              URLs are pre-filled; empty <code>imageUrl</code> cells are ready
+              for you to paste Cloudinary links. Re-upload when done (rows with
+              blank <code>imageUrl</code> are skipped).
             </p>
           </div>
           <Button asChild variant="outline">
-            <a href="/product-images-template.csv" download>
+            <a href="/api/admin/product-images/export">
               <Download className="mr-1 h-4 w-4" />
-              Download template
+              Download products CSV
             </a>
           </Button>
         </div>
@@ -50,6 +51,11 @@ export default function UpdateProductImagesPage() {
       <div className="space-y-3 rounded-lg border bg-card p-4 text-sm">
         <p className="font-semibold">How it works</p>
         <ul className="list-disc space-y-2 pl-5 text-muted-foreground">
+          <li>
+            <strong>Download products CSV</strong> exports{" "}
+            <code>title</code>, <code>slug</code>, <code>imageUrl</code>,{" "}
+            <code>alt</code>, and <code>position</code> for all active products.
+          </li>
           <li>
             <strong>slug</strong> must match an existing product (same as the
             product URL path).
