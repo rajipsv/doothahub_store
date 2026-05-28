@@ -16,6 +16,7 @@ export default async function AdminOrdersPage() {
     paymentMethod: o.paymentMethod,
     fulfillmentType: o.fulfillmentType,
     pickupSlotLabel: o.pickupSlotLabel,
+    orderGroupId: o.orderGroupId,
     totalCents: o.totalCents,
     currency: o.currency,
     hasRazorpayPayment: Boolean(o.razorpayPaymentId),

@@ -73,27 +73,8 @@ export const placeCodOrderSchema = z
 
 export type PlaceCodOrderInput = z.infer<typeof placeCodOrderSchema>;
 
-export const checkoutFulfillmentSchema = z
-  .object({
-    fulfillmentType: fulfillmentTypeSchema.default("DELIVERY"),
-    pickupSlotId: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.fulfillmentType === "PICKUP") {
-      if (!data.pickupSlotId?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Select a pickup time",
-          path: ["pickupSlotId"],
-        });
-        return;
-      }
-      if (!findPickupSlotById(data.pickupSlotId)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Pickup time is no longer available",
-          path: ["pickupSlotId"],
-        });
-      }
-    }
-  });
+export const onlineCheckoutFulfillmentSchema = z.object({
+  fulfillmentType: fulfillmentTypeSchema.default("DELIVERY"),
+  pickupSlotId: z.string().optional(),
+  forceDelivery: z.boolean().optional(),
+});

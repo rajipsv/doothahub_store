@@ -55,6 +55,7 @@ export async function createProductAction(formData: FormData) {
     categoryId: formData.get("categoryId"),
     brandId,
     status: formData.get("status") ?? "DRAFT",
+    pickupEligible: formData.get("pickupEligible") === "on",
     seoTitle: formData.get("seoTitle") || undefined,
     seoDescription: formData.get("seoDescription") || undefined,
     images: JSON.parse((formData.get("imagesJson") as string) || "[]"),
@@ -79,6 +80,7 @@ export async function createProductAction(formData: FormData) {
       categoryId: parsed.data.categoryId,
       brandId: parsed.data.brandId,
       status: parsed.data.status,
+      pickupEligible: parsed.data.pickupEligible,
       seoTitle: parsed.data.seoTitle,
       seoDescription: parsed.data.seoDescription,
       images: { create: parsed.data.images.map((img, idx) => ({ ...img, position: idx })) },
@@ -89,6 +91,22 @@ export async function createProductAction(formData: FormData) {
   bustProductCaches(created.slug);
   revalidatePath("/admin/products");
   return { ok: true, id: created.id };
+}
+
+export async function togglePickupEligibleAction(
+  formData: FormData,
+): Promise<void> {
+  await requireRole("ADMIN");
+  const id = formData.get("id");
+  const value = formData.get("pickupEligible");
+  if (typeof id !== "string") return;
+
+  const product = await db.product.update({
+    where: { id },
+    data: { pickupEligible: value === "true" },
+  });
+  bustProductCaches(product.slug);
+  revalidatePath("/admin/products");
 }
 
 export async function archiveProductAction(formData: FormData): Promise<void> {

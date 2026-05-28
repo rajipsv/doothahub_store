@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CheckoutForm } from "@/modules/checkout";
 import { buildPickupSlots } from "@/modules/checkout/lib/pickup-slots";
-import { CartSummary, getCurrentCart } from "@/modules/cart";
+import { getCurrentCart } from "@/modules/cart";
+import { splitCartByPickupEligibility } from "@/modules/cart/services/pickup-eligibility";
+import { toCartSplitSummary } from "@/modules/cart/lib/cart-split-summary";
+import { CartSummary } from "@/modules/cart";
 import { getOptionalUser } from "@/modules/auth";
 import {
   env,
@@ -21,7 +24,12 @@ export default async function CheckoutPage() {
   if (cart.items.length === 0) redirect("/cart");
 
   const user = await getOptionalUser();
+  const cartSplit = toCartSplitSummary(splitCartByPickupEligibility(cart));
   const pickupSlots = isPickupEnabled ? buildPickupSlots() : [];
+  const canOfferPickup =
+    isPickupEnabled &&
+    pickupSlots.length > 0 &&
+    cartSplit.hasPickupLines;
 
   return (
     <div className="container py-10">
@@ -34,7 +42,8 @@ export default async function CheckoutPage() {
             appName={env.NEXT_PUBLIC_APP_NAME}
             codEnabled={isCodEnabled}
             razorpayConfigured={isRazorpayConfigured}
-            pickupEnabled={isPickupEnabled && pickupSlots.length > 0}
+            canOfferPickup={canOfferPickup}
+            cartSplit={cartSplit}
             pickupSlots={pickupSlots}
             pickupLocationName={pickupLocationName}
             pickupLocationAddress={pickupLocationAddress}

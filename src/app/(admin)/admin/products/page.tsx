@@ -111,6 +111,7 @@ export default async function AdminProductsPage({
     brand: p.brand?.name ?? "\u2014",
     priceCents: p.variants[0]?.priceCents ?? 0,
     inventory: p.variants.reduce((acc, v) => acc + v.inventoryQty, 0),
+    pickupEligible: p.pickupEligible,
   }));
 
   const hasCategories = categories.length > 0;

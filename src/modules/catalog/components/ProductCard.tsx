@@ -43,6 +43,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </p>
         ) : null}
         <h3 className="line-clamp-2 text-sm font-medium">{product.title}</h3>
+        {product.pickupEligible ? (
+          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            Store pickup available
+          </p>
+        ) : null}
         {packSize ? (
           <p className="text-xs font-medium text-primary">{packSize}</p>
         ) : null}

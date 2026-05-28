@@ -26,6 +26,7 @@ type Row = {
   paymentMethod: string;
   fulfillmentType: string;
   pickupSlotLabel: string | null;
+  orderGroupId: string | null;
   totalCents: number;
   currency: string;
   hasRazorpayPayment: boolean;
@@ -54,7 +55,14 @@ export function OrdersTable({ rows }: { rows: Row[] }) {
             isCod && r.paymentStatus === "AWAITING";
           return (
             <TableRow key={r.id}>
-              <TableCell className="font-mono text-xs">{r.orderNumber}</TableCell>
+              <TableCell className="font-mono text-xs">
+                {r.orderNumber}
+                {r.orderGroupId ? (
+                  <p className="mt-0.5 font-sans text-[10px] text-muted-foreground">
+                    Grouped order
+                  </p>
+                ) : null}
+              </TableCell>
               <TableCell>{r.email}</TableCell>
               <TableCell>
                 <Badge variant={isCod ? "outline" : "secondary"}>

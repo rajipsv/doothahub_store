@@ -8,7 +8,7 @@ import type {
 
 export type ProductCardData = Pick<
   Product,
-  "id" | "slug" | "title" | "shortDescription"
+  "id" | "slug" | "title" | "shortDescription" | "pickupEligible"
 > & {
   brand: Pick<Brand, "id" | "name" | "slug"> | null;
   category: Pick<Category, "id" | "name" | "slug">;

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   archiveProductAction,
   deleteProductAction,
+  togglePickupEligibleAction,
 } from "@/modules/admin/actions/products";
 import { formatMoney } from "@/lib/utils";
 
@@ -33,36 +34,32 @@ type Row = {
   brand: string;
   priceCents: number;
   inventory: number;
+  pickupEligible: boolean;
 };
 
 const col = createColumnHelper<Row>();
 
-const columns = [
-  col.accessor("title", { header: "Title" }),
-  col.accessor("category", { header: "Category" }),
-  col.accessor("brand", { header: "Brand" }),
-  col.accessor("slug", { header: "Slug" }),
-  col.accessor("status", {
-    header: "Status",
-    cell: (info) => (
-      <Badge variant={info.getValue() === "ACTIVE" ? "success" : "secondary"}>
-        {info.getValue()}
-      </Badge>
-    ),
-  }),
-  col.accessor("priceCents", {
-    header: "Price",
-    cell: (info) => formatMoney(info.getValue()),
-  }),
-  col.accessor("inventory", { header: "Inventory" }),
-  col.display({
-    id: "actions",
-    header: "Actions",
-    cell: (info) => (
-      <RowActions id={info.row.original.id} title={info.row.original.title} />
-    ),
-  }),
-];
+function PickupToggle({
+  id,
+  pickupEligible,
+}: {
+  id: string;
+  pickupEligible: boolean;
+}) {
+  return (
+    <form action={togglePickupEligibleAction}>
+      <input type="hidden" name="id" value={id} />
+      <input
+        type="hidden"
+        name="pickupEligible"
+        value={pickupEligible ? "false" : "true"}
+      />
+      <Button type="submit" variant={pickupEligible ? "default" : "outline"} size="sm">
+        {pickupEligible ? "Pickup on" : "Pickup off"}
+      </Button>
+    </form>
+  );
+}
 
 function RowActions({ id, title }: { id: string; title: string }) {
   function confirmDelete(e: React.FormEvent<HTMLFormElement>) {
@@ -101,6 +98,42 @@ function RowActions({ id, title }: { id: string; title: string }) {
     </div>
   );
 }
+
+const columns = [
+  col.accessor("title", { header: "Title" }),
+  col.accessor("category", { header: "Category" }),
+  col.accessor("brand", { header: "Brand" }),
+  col.accessor("slug", { header: "Slug" }),
+  col.accessor("status", {
+    header: "Status",
+    cell: (info) => (
+      <Badge variant={info.getValue() === "ACTIVE" ? "success" : "secondary"}>
+        {info.getValue()}
+      </Badge>
+    ),
+  }),
+  col.accessor("pickupEligible", {
+    header: "Pickup",
+    cell: (info) => (
+      <PickupToggle
+        id={info.row.original.id}
+        pickupEligible={info.getValue()}
+      />
+    ),
+  }),
+  col.accessor("priceCents", {
+    header: "Price",
+    cell: (info) => formatMoney(info.getValue()),
+  }),
+  col.accessor("inventory", { header: "Inventory" }),
+  col.display({
+    id: "actions",
+    header: "Actions",
+    cell: (info) => (
+      <RowActions id={info.row.original.id} title={info.row.original.title} />
+    ),
+  }),
+];
 
 export function ProductsTable({ data }: { data: Row[] }) {
   const table = useReactTable({

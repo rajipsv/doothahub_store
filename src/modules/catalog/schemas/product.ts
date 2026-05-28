@@ -12,6 +12,7 @@ export const productCreateSchema = z.object({
   brandId: z.string().uuid().optional(),
   categoryId: z.string().uuid(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),
+  pickupEligible: z.boolean().default(false),
   seoTitle: z.string().max(80).optional(),
   seoDescription: z.string().max(160).optional(),
   images: z

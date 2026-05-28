@@ -9,6 +9,7 @@ const cardSelect = {
   id: true,
   slug: true,
   title: true,
+  pickupEligible: true,
   shortDescription: true,
   brand: { select: { id: true, name: true, slug: true } },
   category: { select: { id: true, name: true, slug: true } },

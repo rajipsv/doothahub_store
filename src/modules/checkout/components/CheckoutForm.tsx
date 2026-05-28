@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { placeCodOrderAction } from "@/modules/checkout/actions/place-cod-order";
 import type { PickupSlot } from "@/modules/checkout/lib/pickup-slots";
+import type { CartSplitSummary } from "@/modules/cart/lib/cart-split-summary";
+import { formatMoney } from "@/lib/utils";
 import {
   createRazorpayCheckoutOrderAction,
   razorpayCheckoutDisplayConfig,
@@ -46,11 +48,46 @@ type Props = {
   appName?: string;
   codEnabled?: boolean;
   razorpayConfigured?: boolean;
-  pickupEnabled?: boolean;
+  canOfferPickup?: boolean;
+  cartSplit: CartSplitSummary;
   pickupSlots?: PickupSlot[];
   pickupLocationName?: string;
   pickupLocationAddress?: string;
 };
+
+function orderSuccessUrl(orderNumbers: string[]) {
+  return `/orders/success?${orderNumbers.map((n) => `o=${encodeURIComponent(n)}`).join("&")}`;
+}
+
+function CartLinesList({
+  title,
+  lines,
+  subtotalCents,
+}: {
+  title: string;
+  lines: CartSplitSummary["pickupLines"];
+  subtotalCents: number;
+}) {
+  if (lines.length === 0) return null;
+  return (
+    <div className="rounded-md border bg-background p-3 text-sm">
+      <p className="font-semibold">{title}</p>
+      <ul className="mt-2 space-y-1 text-muted-foreground">
+        {lines.map((line) => (
+          <li key={line.cartItemId} className="flex justify-between gap-2">
+            <span>
+              {line.title} × {line.quantity}
+            </span>
+            <span>{formatMoney(line.lineTotalCents)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-right font-medium">
+        Subtotal {formatMoney(subtotalCents)}
+      </p>
+    </div>
+  );
+}
 
 export function CheckoutForm({
   defaultEmail,
@@ -59,7 +96,8 @@ export function CheckoutForm({
   appName,
   codEnabled = false,
   razorpayConfigured = false,
-  pickupEnabled = false,
+  canOfferPickup = false,
+  cartSplit,
   pickupSlots = [],
   pickupLocationName = "Store",
   pickupLocationAddress = "",
@@ -69,7 +107,9 @@ export function CheckoutForm({
     codEnabled && !razorpayConfigured ? "cod" : "online",
   );
   const [fulfillmentType, setFulfillmentType] =
-    React.useState<FulfillmentChoice>("DELIVERY");
+    React.useState<FulfillmentChoice>(
+      canOfferPickup && cartSplit.allLinesPickupEligible ? "PICKUP" : "DELIVERY",
+    );
   const [pickupSlotId, setPickupSlotId] = React.useState(
     pickupSlots[0]?.id ?? "",
   );
@@ -87,8 +127,12 @@ export function CheckoutForm({
 
   const showOnline = razorpayConfigured;
   const showCod = codEnabled;
-  const isPickup = pickupEnabled && fulfillmentType === "PICKUP";
-  const needsAddress = !isPickup && paymentMethod === "cod";
+  const forceDelivery =
+    cartSplit.allLinesPickupEligible && fulfillmentType === "DELIVERY";
+  const needsPickupSection =
+    cartSplit.isMixed ||
+    (cartSplit.hasPickupLines && !forceDelivery);
+  const needsAddress = cartSplit.hasDeliveryLines || forceDelivery;
 
   React.useEffect(() => {
     if (paymentMethod === "online" && !showOnline && showCod) {
@@ -106,7 +150,7 @@ export function CheckoutForm({
   }, [pickupSlots, pickupSlotId]);
 
   function validatePickup(): boolean {
-    if (!isPickup) return true;
+    if (!needsPickupSection) return true;
     if (!pickupSlotId) {
       setError("Please select a pickup time");
       return false;
@@ -206,8 +250,12 @@ export function CheckoutForm({
       email,
       name,
       phone,
-      fulfillmentType,
-      pickupSlotId: isPickup ? pickupSlotId : undefined,
+      fulfillmentType: cartSplit.isMixed
+        ? "PICKUP"
+        : forceDelivery
+          ? "DELIVERY"
+          : fulfillmentType,
+      pickupSlotId: needsPickupSection ? pickupSlotId : undefined,
       line1: needsAddress ? line1 : undefined,
       line2: needsAddress ? line2 || undefined : undefined,
       city: needsAddress ? city : undefined,
@@ -220,7 +268,7 @@ export function CheckoutForm({
       setError(res.error);
       return;
     }
-    router.push(`/orders/success?o=${encodeURIComponent(res.orderNumber)}`);
+    router.push(orderSuccessUrl(res.orderNumbers));
   }
 
   async function finalisePayment(args: {
@@ -232,15 +280,20 @@ export function CheckoutForm({
     const res = await verifyAndPlaceOrderAction({
       ...args,
       email,
-      fulfillmentType,
-      pickupSlotId: isPickup ? pickupSlotId : undefined,
+      fulfillmentType: cartSplit.isMixed
+        ? "PICKUP"
+        : forceDelivery
+          ? "DELIVERY"
+          : fulfillmentType,
+      pickupSlotId: needsPickupSection ? pickupSlotId : undefined,
+      forceDelivery,
     });
     setLoading(false);
     if (!res.ok) {
       setError(res.error);
       return;
     }
-    router.push(`/orders/success?o=${encodeURIComponent(res.orderNumber)}`);
+    router.push(orderSuccessUrl(res.orderNumbers));
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -254,20 +307,46 @@ export function CheckoutForm({
 
   const onlineDisabled = loading || (showOnline && !scriptReady);
   const codDisabled = loading;
+  const payAtPickup = needsPickupSection && !needsAddress;
 
   const submitLabel = loading
     ? "Processing..."
     : paymentMethod === "cod"
-      ? isPickup
+      ? payAtPickup && !cartSplit.isMixed
         ? "Place order (pay at pickup)"
-        : "Place order (cash on delivery)"
+        : cartSplit.isMixed
+          ? "Place orders (cash)"
+          : "Place order (cash on delivery)"
       : scriptReady
-        ? "Pay with Razorpay"
+        ? cartSplit.isMixed
+          ? "Pay with Razorpay"
+          : "Pay with Razorpay"
         : "Loading payment...";
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      {pickupEnabled ? (
+      {cartSplit.isMixed ? (
+        <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
+          <p className="font-semibold">Split order</p>
+          <p className="text-muted-foreground">
+            Pickup-eligible items will be a store pickup order; other items will
+            be delivered. You complete one checkout and receive two order
+            numbers.
+          </p>
+          <CartLinesList
+            title={`Pickup items (${cartSplit.pickupLines.length})`}
+            lines={cartSplit.pickupLines}
+            subtotalCents={cartSplit.pickupSubtotalCents}
+          />
+          <CartLinesList
+            title={`Delivery items (${cartSplit.deliveryLines.length})`}
+            lines={cartSplit.deliveryLines}
+            subtotalCents={cartSplit.deliverySubtotalCents}
+          />
+        </div>
+      ) : null}
+
+      {canOfferPickup && cartSplit.allLinesPickupEligible && !cartSplit.isMixed ? (
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium">How do you want your order?</legend>
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[:checked]:border-primary">
@@ -334,9 +413,16 @@ export function CheckoutForm({
               className="mt-1"
             />
             <span>
-              <span className="font-medium">Pay on {isPickup ? "pickup" : "delivery"}</span>
+              <span className="font-medium">
+                Pay on {payAtPickup && !cartSplit.isMixed ? "pickup" : "delivery"}
+              </span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
-                Pay in cash when you {isPickup ? "collect your order" : "receive delivery"}
+                Pay in cash when you{" "}
+                {cartSplit.isMixed
+                  ? "pick up or receive delivery"
+                  : payAtPickup
+                    ? "collect your order"
+                    : "receive delivery"}
               </span>
             </span>
           </label>
@@ -388,7 +474,7 @@ export function CheckoutForm({
         />
       </div>
 
-      {isPickup ? (
+      {needsPickupSection ? (
         <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
           <p className="text-sm font-semibold">Pickup details</p>
           <div className="text-sm text-muted-foreground">
@@ -502,9 +588,11 @@ export function CheckoutForm({
         </div>
       ) : paymentMethod === "cod" ? (
         <p className="text-xs text-muted-foreground">
-          {isPickup
-            ? "Your order is confirmed. Please bring exact cash when you collect at the selected time."
-            : "Your order is confirmed. Please keep exact cash ready for the delivery person."}
+          {cartSplit.isMixed
+            ? "You will receive two order confirmations. Pay the correct amount for each part when you pick up or receive delivery."
+            : payAtPickup
+              ? "Your order is confirmed. Please bring exact cash when you collect at the selected time."
+              : "Your order is confirmed. Please keep exact cash ready for the delivery person."}
         </p>
       ) : null}
 

@@ -174,6 +174,7 @@ model Product {
   brandId          String?       @db.Uuid
   categoryId       String        @db.Uuid
   status           ProductStatus @default(DRAFT)
+  pickupEligible   Boolean       @default(false)
   seoTitle         String?
   seoDescription   String?
 
@@ -310,7 +311,8 @@ model Order {
   paymentMethod         PaymentMethod   @default(ONLINE)
   fulfillmentType       FulfillmentType @default(DELIVERY)
   pickupSlotAt          DateTime?
-  pickupSlotLabel         String?
+  pickupSlotLabel       String?
+  orderGroupId          String?         @db.Uuid
   subtotalCents         Int
   taxCents              Int           @default(0)
   shippingCents         Int           @default(0)
@@ -333,6 +335,7 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([orderGroupId])
   @@map("orders")
 }
 

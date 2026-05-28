@@ -9,49 +9,69 @@ import { formatMoney } from "@/lib/utils";
 export const metadata: Metadata = { title: "Order confirmed" };
 export const dynamic = "force-dynamic";
 
+function parseOrderNumbers(
+  raw: string | string[] | undefined,
+): string[] {
+  if (!raw) return [];
+  const list = Array.isArray(raw) ? raw : [raw];
+  return [...new Set(list.filter(Boolean))];
+}
+
 export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ o?: string }>;
+  searchParams: Promise<{ o?: string | string[] }>;
 }) {
   const { o } = await searchParams;
+  const orderNumbers = parseOrderNumbers(o);
 
-  const order = o
-    ? await db.order.findUnique({
-        where: { orderNumber: o },
-        include: { items: true, shippingAddress: true },
-      })
-    : null;
+  const orders =
+    orderNumbers.length > 0
+      ? await db.order.findMany({
+          where: { orderNumber: { in: orderNumbers } },
+          include: { items: true, shippingAddress: true },
+          orderBy: { createdAt: "asc" },
+        })
+      : [];
+
+  const combinedTotal = orders.reduce((sum, ord) => sum + ord.totalCents, 0);
+  const currency = orders[0]?.currency ?? "INR";
 
   return (
     <div className="container mx-auto max-w-2xl py-12">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold tracking-tight">Thank you!</h1>
-        {order?.paymentMethod === PaymentMethod.COD ? (
+        {orders.length > 1 ? (
+          <p className="mt-2 text-muted-foreground">
+            Your cart was split into {orders.length} orders (
+            {orders.map((ord) => ord.orderNumber).join(" and ")}). Total{" "}
+            <strong>{formatMoney(combinedTotal, currency)}</strong>.
+          </p>
+        ) : orders[0]?.paymentMethod === PaymentMethod.COD ? (
           <p className="mt-2 text-muted-foreground">
             Your order is confirmed. Pay{" "}
             <strong>
-              {formatMoney(order.totalCents, order.currency)}
+              {formatMoney(orders[0].totalCents, orders[0].currency)}
             </strong>{" "}
             in cash when you{" "}
-            {order.fulfillmentType === FulfillmentType.PICKUP
+            {orders[0].fulfillmentType === FulfillmentType.PICKUP
               ? "pick up your order"
               : "receive delivery"}
             .
-            {order.pickupSlotLabel ? (
+            {orders[0].pickupSlotLabel ? (
               <>
                 {" "}
-                Pickup: <strong>{order.pickupSlotLabel}</strong>.
+                Pickup: <strong>{orders[0].pickupSlotLabel}</strong>.
               </>
             ) : null}{" "}
             A confirmation email is on its way.
           </p>
-        ) : order?.fulfillmentType === FulfillmentType.PICKUP &&
-          order.pickupSlotLabel ? (
+        ) : orders[0]?.fulfillmentType === FulfillmentType.PICKUP &&
+          orders[0].pickupSlotLabel ? (
           <p className="mt-2 text-muted-foreground">
             Your order is confirmed for pickup at{" "}
-            <strong>{order.pickupSlotLabel}</strong>. A confirmation email is on
-            its way.
+            <strong>{orders[0].pickupSlotLabel}</strong>. A confirmation email is
+            on its way.
           </p>
         ) : (
           <p className="mt-2 text-muted-foreground">
@@ -59,13 +79,18 @@ export default async function OrderSuccessPage({
           </p>
         )}
       </div>
-      {order ? (
-        <OrderSummary order={order} />
-      ) : (
-        <p className="text-center text-muted-foreground">
-          Order details are being processed. Check your email shortly.
-        </p>
-      )}
+
+      <div className="space-y-8">
+        {orders.map((order) => (
+          <OrderSummary key={order.id} order={order} />
+        ))}
+        {orders.length === 0 ? (
+          <p className="text-center text-muted-foreground">
+            Order details are being processed. Check your email shortly.
+          </p>
+        ) : null}
+      </div>
+
       <div className="mt-8 text-center">
         <Button asChild>
           <Link href="/products">Continue shopping</Link>

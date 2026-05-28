@@ -8,15 +8,13 @@ import {
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCart, getCartById } from "@/modules/cart";
+import { makeOrderNumber } from "@/modules/orders/services/order-number";
 
-function makeOrderNumber(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < 10; i++) {
-    out += alphabet[Math.floor(Math.random() * alphabet.length)] ?? "";
-  }
-  return out;
-}
+export { createCheckoutOrders } from "@/modules/orders/services/checkout-orders";
+export type {
+  CreateCheckoutOrdersInput,
+  CreateCheckoutOrdersResult,
+} from "@/modules/orders/services/checkout-orders";
 
 export async function createOrderFromCart(args: {
   userId: string | null;
@@ -112,18 +110,31 @@ export async function markOrderPaid(args: {
   ) {
     return order;
   }
+
+  const paidData = {
+    status: OrderStatus.PAID,
+    paymentStatus: PaymentStatus.SUCCEEDED,
+    paymentMethod: PaymentMethod.ONLINE,
+    razorpayPaymentId: args.razorpayPaymentId ?? order.razorpayPaymentId,
+  };
+
+  if (order.orderGroupId) {
+    await db.order.updateMany({
+      where: {
+        OR: [{ id: order.id }, { orderGroupId: order.orderGroupId }],
+      },
+      data: paidData,
+    });
+    return db.order.findUnique({ where: { id: order.id } });
+  }
+
   return db.order.update({
     where: { id: order.id },
-    data: {
-      status: OrderStatus.PAID,
-      paymentStatus: PaymentStatus.SUCCEEDED,
-      paymentMethod: PaymentMethod.ONLINE,
-      razorpayPaymentId: args.razorpayPaymentId ?? order.razorpayPaymentId,
-    },
+    data: paidData,
   });
 }
 
-/** Admin confirms cash collected for a COD order. */
+/** Admin confirms cash collected for a COD order (and siblings in the same group). */
 export async function markCodPaymentReceived(orderId: string) {
   const order = await db.order.findUnique({ where: { id: orderId } });
   if (!order) return null;
@@ -133,12 +144,26 @@ export async function markCodPaymentReceived(orderId: string) {
   if (order.paymentStatus === PaymentStatus.SUCCEEDED) {
     return order;
   }
+
+  const paidData = {
+    status: OrderStatus.PAID,
+    paymentStatus: PaymentStatus.SUCCEEDED,
+  };
+
+  if (order.orderGroupId) {
+    await db.order.updateMany({
+      where: {
+        orderGroupId: order.orderGroupId,
+        paymentMethod: PaymentMethod.COD,
+      },
+      data: paidData,
+    });
+    return db.order.findUnique({ where: { id: orderId } });
+  }
+
   return db.order.update({
     where: { id: orderId },
-    data: {
-      status: OrderStatus.PAID,
-      paymentStatus: PaymentStatus.SUCCEEDED,
-    },
+    data: paidData,
   });
 }
 
