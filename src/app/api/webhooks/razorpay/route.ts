@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import {
   handleRazorpayEvent,
   type RazorpayWebhookEvent,
-} from "@/modules/payments";
+} from "@/modules/payments/server";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";

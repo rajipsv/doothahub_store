@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { placeCodOrderAction } from "@/modules/checkout";
+import { placeCodOrderAction } from "@/modules/checkout/actions/place-cod-order";
 import {
   createRazorpayCheckoutOrderAction,
   razorpayCheckoutDisplayConfig,

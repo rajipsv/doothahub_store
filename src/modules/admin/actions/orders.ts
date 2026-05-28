@@ -8,7 +8,7 @@ import {
   markCodPaymentReceived,
   updateOrderStatus,
 } from "@/modules/orders";
-import { refundRazorpayPayment } from "@/modules/payments";
+import { refundRazorpayPayment } from "@/modules/payments/services/razorpay";
 import { bustOrderCaches } from "@/lib/cache";
 import { logger } from "@/lib/logger";
 
