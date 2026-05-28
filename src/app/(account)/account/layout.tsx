@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
 import { requireUser, SignOutButton } from "@/modules/auth";
 
 export default async function AccountLayout({
@@ -15,6 +17,12 @@ export default async function AccountLayout({
       <div className="container flex-1 py-10">
         <div className="grid gap-8 md:grid-cols-[200px_1fr]">
           <nav className="space-y-2 text-sm font-medium">
+            <Button asChild size="sm" className="mb-2 w-full justify-start gap-2">
+              <Link href="/products">
+                Continue shopping
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
             <Link href="/account" className="block hover:underline">
               Profile
             </Link>

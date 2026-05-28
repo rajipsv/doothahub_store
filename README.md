@@ -85,7 +85,7 @@ The env validator is intentionally permissive so you can deploy in stages:
 | Goal | Required env vars |
 | --- | --- |
 | **Just deploy the storefront** (browse + cart) | `DATABASE_URL` |
-| Also enable sign-in / sign-up | `+ AUTH_SECRET` (32+ chars) |
+| Also enable sign-in / sign-up | `+ AUTH_SECRET` (32+ chars), `AUTH_URL` (production URL on Vercel), `AUTH_TRUST_HOST=true` |
 | Also enable checkout / orders | `+ RAZORPAY_KEY_ID` `+ RAZORPAY_KEY_SECRET` `+ NEXT_PUBLIC_RAZORPAY_KEY_ID` `+ RAZORPAY_WEBHOOK_SECRET` |
 | Also enable Google / GitHub OAuth | `+ AUTH_GOOGLE_ID` / `_SECRET`, `AUTH_GITHUB_ID` / `_SECRET` |
 | Also enable order-confirmation emails | `+ RESEND_API_KEY` `+ RESEND_FROM_EMAIL` |
@@ -142,6 +142,8 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
+**Browsing products does not require sign-in.** After sign-in, customers are sent to `/products` (or back to `callbackUrl` when they were redirected from checkout). If `/products` is empty while logged out, the catalogue is missing in the database — run `pnpm db:seed` against your production `DATABASE_URL` or add products in admin; that is not an auth issue.
+
 ### 6. Local webhooks
 
 Razorpay webhooks need a public URL. Use any tunnel (e.g. `cloudflared`):
@@ -177,7 +179,8 @@ cloudflared tunnel --url http://localhost:3000
    - Runs `prisma/seed.ts` once (idempotent — bails out if any products already exist).
    - Runs `next build`.
 4. Add `AUTH_SECRET` when you want sign-in to work. Add `RAZORPAY_*` when you want payments. Add `RESEND_*` for confirmation emails. (See the env-vars-by-goal table above.)
-5. For Razorpay, add a webhook in their dashboard pointing at `https://<your-domain>/api/webhooks/razorpay` and paste its secret into `RAZORPAY_WEBHOOK_SECRET`.
+5. **Auth on mobile / production:** set `AUTH_URL` to your public site (e.g. `https://doothahub-store.vercel.app`), not `http://localhost:3000`. Keep `AUTH_TRUST_HOST=true`. Redeploy after changing env vars. If sign-in loops or the header still shows “Sign in”, check Vercel logs and confirm `AUTH_SECRET` is set for Production.
+6. For Razorpay, add a webhook in their dashboard pointing at `https://<your-domain>/api/webhooks/razorpay` and paste its secret into `RAZORPAY_WEBHOOK_SECRET`.
 
 > **Disable auto-seed:** set `SEED_ON_DEPLOY=false` in the Vercel env vars if you don't want the demo data inserted on first deploy.
 

@@ -82,6 +82,7 @@ if (env.AUTH_GITHUB_ID && env.AUTH_GITHUB_SECRET) {
 export const authConfig = {
   adapter: PrismaAdapter(db),
   providers,
+  secret: env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/sign-in",

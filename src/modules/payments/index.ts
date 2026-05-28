@@ -10,4 +10,7 @@ export {
   verifyAndPlaceOrderAction,
   type VerifyResult,
 } from "@/modules/payments/actions/verify-payment";
-export { razorpayCheckoutDisplayConfig } from "@/modules/payments/razorpay-checkout-display";
+export {
+  razorpayCheckoutDisplayConfig,
+  razorpayCheckoutMethods,
+} from "@/modules/payments/razorpay-checkout-display";

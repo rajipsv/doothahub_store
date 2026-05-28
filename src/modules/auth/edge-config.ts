@@ -13,6 +13,7 @@ import type { Role } from "@prisma/client";
  */
 export const edgeAuthConfig = {
   providers: [],
+  secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   trustHost: true,
   callbacks: {

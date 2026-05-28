@@ -21,6 +21,9 @@ export async function Header() {
           <span className="text-gradient-tech">DoothaHub</span>
         </Link>
         <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/products">Shop</Link>
+          </Button>
           <ThemeToggle />
           {isAdmin ? (
             <Button asChild variant="ghost" size="sm">

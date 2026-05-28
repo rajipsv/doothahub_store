@@ -9,11 +9,18 @@ import { Label } from "@/components/ui/label";
 
 const initial: SignInState = { ok: false };
 
-export function SignInForm() {
+type Props = {
+  callbackUrl?: string;
+};
+
+export function SignInForm({ callbackUrl }: Props) {
   const [state, action, pending] = useActionState(signInAction, initial);
 
   return (
     <form action={action} className="space-y-4">
+      {callbackUrl ? (
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+      ) : null}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input

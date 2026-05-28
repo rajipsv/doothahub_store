@@ -6,6 +6,7 @@ import { verifyCredentials } from "@/modules/auth/services/users";
 import { authLimiter } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
+import { sanitizeCallbackUrl } from "@/modules/auth/lib/safe-callback-url";
 
 function destinationForRole(role: string | null | undefined): string {
   switch (role) {
@@ -16,8 +17,16 @@ function destinationForRole(role: string | null | undefined): string {
     case "SUPPORT":
       return "/admin/orders";
     default:
-      return "/account";
+      return "/products";
   }
+}
+
+function resolveRedirectTo(
+  role: string | null | undefined,
+  callbackUrl: string | undefined,
+): string {
+  const defaultDest = destinationForRole(role);
+  return sanitizeCallbackUrl(callbackUrl, defaultDest);
 }
 
 export type SignInState = {
@@ -38,6 +47,8 @@ export async function signInAction(
   }
 
   const raw = Object.fromEntries(formData.entries());
+  const callbackRaw =
+    typeof raw.callbackUrl === "string" ? raw.callbackUrl : undefined;
   const parsed = signInSchema.safeParse(raw);
   if (!parsed.success) {
     return {
@@ -59,7 +70,7 @@ export async function signInAction(
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: destinationForRole(user.role),
+      redirectTo: resolveRedirectTo(user.role, callbackRaw),
     });
     return { ok: true };
   } catch (err) {

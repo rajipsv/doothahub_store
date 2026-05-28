@@ -10,6 +10,7 @@ import { placeCodOrderAction } from "@/modules/checkout/actions/place-cod-order"
 import {
   createRazorpayCheckoutOrderAction,
   razorpayCheckoutDisplayConfig,
+  razorpayCheckoutMethods,
   verifyAndPlaceOrderAction,
 } from "@/modules/payments";
 
@@ -118,6 +119,7 @@ export function CheckoutForm({
       },
       notes: { cartId: init.cartId },
       theme: { color: "#0f172a" },
+      method: razorpayCheckoutMethods,
       config: razorpayCheckoutDisplayConfig,
       handler: (response: RazorpaySuccessResponse) => {
         void finalisePayment({
@@ -369,10 +371,29 @@ export function CheckoutForm({
       </Button>
 
       {paymentMethod === "online" && showOnline ? (
-        <p className="text-xs text-muted-foreground">
-          After clicking Pay, choose <strong>UPI</strong> or{" "}
-          <strong>GPay / PhonePe</strong> in the Razorpay popup.
-        </p>
+        <div className="space-y-2 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">How to pay with PhonePe / GPay</p>
+          <ol className="list-decimal space-y-1 pl-4">
+            <li>Click <strong>Pay with Razorpay</strong> below.</li>
+            <li>
+              In the Razorpay window, open the <strong>UPI</strong> section (not
+              Cards).
+            </li>
+            <li>
+              <strong>On your phone:</strong> tap the PhonePe or Google Pay icon
+              (install the app first if needed).
+            </li>
+            <li>
+              <strong>On a computer:</strong> use the QR code — open PhonePe or GPay
+              on your phone and scan it.
+            </li>
+          </ol>
+          <p>
+            PhonePe does not appear as a separate button on our site; it is inside
+            Razorpay under UPI. If you do not see UPI at all, enable UPI in your
+            Razorpay Dashboard → Settings → Payment methods.
+          </p>
+        </div>
       ) : paymentMethod === "cod" ? (
         <p className="text-xs text-muted-foreground">
           Your order is confirmed immediately. Please keep exact cash ready for
