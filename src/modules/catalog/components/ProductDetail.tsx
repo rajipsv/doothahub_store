@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { PriceTag } from "@/modules/catalog/components/PriceTag";
 import { VariantPicker } from "@/modules/catalog/components/VariantPicker";
+import { getVariantDisplayLabel } from "@/modules/catalog/lib/variant-display";
 import type { ProductDetail as ProductDetailData } from "@/modules/catalog/types";
 
 type Props = {
@@ -20,6 +21,14 @@ export function ProductDetail({ product, onAddToCart }: Props) {
   const [pending, setPending] = React.useState(false);
   const selected =
     product.variants.find((v) => v.id === variantId) ?? product.variants[0];
+
+  const packSize = selected
+    ? getVariantDisplayLabel({
+        attributes: selected.attributes as Record<string, unknown>,
+        slug: product.slug,
+        weightGrams: selected.weightGrams,
+      })
+    : null;
 
   async function handleAdd() {
     if (!selected) return;
@@ -78,6 +87,11 @@ export function ProductDetail({ product, onAddToCart }: Props) {
           <h1 className="mt-1 text-3xl font-bold tracking-tight">
             {product.title}
           </h1>
+          {packSize ? (
+            <p className="mt-2 text-base font-medium text-foreground">
+              Pack size: <span className="text-primary">{packSize}</span>
+            </p>
+          ) : null}
         </div>
 
         {selected ? (

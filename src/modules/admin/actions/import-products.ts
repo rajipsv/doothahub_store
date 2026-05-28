@@ -5,7 +5,14 @@ import { revalidatePath } from "next/cache";
 import { ProductStatus } from "@prisma/client";
 import { requireRole } from "@/modules/auth";
 import { db } from "@/lib/db";
+import { packSizeFromSlug } from "@/modules/catalog";
 import { buildVariantSku, slugify } from "@/lib/utils";
+
+function resolveVariantSize(sizeRaw: string, productSlug: string): string {
+  const trimmed = sizeRaw.trim();
+  if (trimmed && trimmed.toLowerCase() !== "default") return trimmed;
+  return packSizeFromSlug(productSlug) ?? "Default";
+}
 
 export type ImportRowResult = {
   row: number;
@@ -235,7 +242,7 @@ export async function importProductsAction(
         ? parseRupeesToPaise(compareRaw, "comparePrice")
         : null;
       const inventoryQty = parseInt0(r.inventory, "inventory");
-      const size = (r.size ?? "").trim() || "Default";
+      const size = resolveVariantSize(r.size ?? "", slug);
       let sku = (r.sku ?? "").trim();
       if (!sku) sku = await allocateUniqueSku(slug, size);
 

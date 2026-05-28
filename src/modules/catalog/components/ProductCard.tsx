@@ -1,11 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PriceTag } from "@/modules/catalog/components/PriceTag";
+import { getVariantDisplayLabel } from "@/modules/catalog/lib/variant-display";
 import type { ProductCardData } from "@/modules/catalog/types";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const image = product.images[0];
   const variant = product.variants[0];
+  const packSize = variant
+    ? getVariantDisplayLabel({
+        attributes: variant.attributes as Record<string, unknown>,
+        slug: product.slug,
+        weightGrams: variant.weightGrams,
+      })
+    : null;
 
   return (
     <Link
@@ -34,6 +42,9 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </p>
         ) : null}
         <h3 className="line-clamp-2 text-sm font-medium">{product.title}</h3>
+        {packSize ? (
+          <p className="text-xs font-medium text-primary">{packSize}</p>
+        ) : null}
         {variant ? (
           <PriceTag
             cents={variant.priceCents}

@@ -38,3 +38,7 @@ export { ProductDetail } from "@/modules/catalog/components/ProductDetail";
 export { VariantPicker } from "@/modules/catalog/components/VariantPicker";
 export { PriceTag } from "@/modules/catalog/components/PriceTag";
 export { CategoryTree } from "@/modules/catalog/components/CategoryTree";
+export {
+  getVariantDisplayLabel,
+  packSizeFromSlug,
+} from "@/modules/catalog/lib/variant-display";

@@ -21,7 +21,25 @@ export function VariantPicker({ variants, value, onChange }: Props) {
     return Array.from(keys);
   }, [variants]);
 
-  if (variants.length <= 1) return null;
+  if (variants.length <= 1) {
+    const only = variants[0];
+    if (!only) return null;
+    const attrs = (only.attributes ?? {}) as Record<string, string>;
+    const entries = Object.entries(attrs).filter(
+      ([, v]) => v && v.toLowerCase() !== "default",
+    );
+    if (entries.length === 0) return null;
+    return (
+      <div className="space-y-2">
+        {entries.map(([key, val]) => (
+          <div key={key}>
+            <p className="mb-1 text-sm font-medium capitalize">{key}</p>
+            <p className="text-sm text-muted-foreground">{val}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
