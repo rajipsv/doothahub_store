@@ -17,6 +17,7 @@ export type CreatedRazorpayOrder = {
 export async function createRazorpayOrder(args: {
   cart: FullCart;
   email: string;
+  phone: string;
   userId: string | null;
 }): Promise<CreatedRazorpayOrder> {
   const amount = args.cart.totalCents;
@@ -31,6 +32,7 @@ export async function createRazorpayOrder(args: {
       cartId: args.cart.id,
       userId: args.userId ?? "",
       email: args.email,
+      phone: args.phone,
     },
   });
 

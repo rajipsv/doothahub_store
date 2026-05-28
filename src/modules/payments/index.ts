@@ -13,6 +13,7 @@ export {
   createRazorpayCheckoutOrderAction,
   type CreateRazorpayOrderResult,
 } from "@/modules/payments/actions/create-order";
+export { razorpayCheckoutDisplayConfig } from "@/modules/payments/razorpay-checkout-display";
 export {
   verifyAndPlaceOrderAction,
   type VerifyResult,

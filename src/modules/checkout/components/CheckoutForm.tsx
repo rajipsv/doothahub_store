@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createRazorpayCheckoutOrderAction } from "@/modules/payments/actions/create-order";
-import { verifyAndPlaceOrderAction } from "@/modules/payments/actions/verify-payment";
+import {
+  createRazorpayCheckoutOrderAction,
+  razorpayCheckoutDisplayConfig,
+  verifyAndPlaceOrderAction,
+} from "@/modules/payments";
 
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -33,13 +36,20 @@ declare global {
 type Props = {
   defaultEmail?: string;
   defaultName?: string;
+  defaultPhone?: string;
   appName?: string;
 };
 
-export function CheckoutForm({ defaultEmail, defaultName, appName }: Props) {
+export function CheckoutForm({
+  defaultEmail,
+  defaultName,
+  defaultPhone,
+  appName,
+}: Props) {
   const router = useRouter();
   const [email, setEmail] = React.useState(defaultEmail ?? "");
   const [name, setName] = React.useState(defaultName ?? "");
+  const [phone, setPhone] = React.useState(defaultPhone ?? "");
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [scriptReady, setScriptReady] = React.useState(false);
@@ -50,13 +60,17 @@ export function CheckoutForm({ defaultEmail, defaultName, appName }: Props) {
       setError("Email is required");
       return;
     }
+    if (!phone.trim()) {
+      setError("Mobile number is required for UPI (GPay, PhonePe)");
+      return;
+    }
     if (typeof window === "undefined" || !window.Razorpay) {
       setError("Payment SDK is still loading. Try again in a moment.");
       return;
     }
 
     setLoading(true);
-    const init = await createRazorpayCheckoutOrderAction({ email, name });
+    const init = await createRazorpayCheckoutOrderAction({ email, name, phone });
     if (!init.ok) {
       setLoading(false);
       setError(init.error);
@@ -70,9 +84,14 @@ export function CheckoutForm({ defaultEmail, defaultName, appName }: Props) {
       currency: init.currency,
       name: appName ?? "DoothaHub Store",
       description: "Order payment",
-      prefill: { email: init.prefill.email, name: init.prefill.name ?? "" },
+      prefill: {
+        email: init.prefill.email,
+        name: init.prefill.name ?? "",
+        contact: init.prefill.contact,
+      },
       notes: { cartId: init.cartId },
       theme: { color: "#0f172a" },
+      config: razorpayCheckoutDisplayConfig,
       handler: (response: RazorpaySuccessResponse) => {
         void finalisePayment({
           razorpayOrderId: response.razorpay_order_id,
@@ -142,6 +161,23 @@ export function CheckoutForm({ defaultEmail, defaultName, appName }: Props) {
         />
       </div>
 
+      <div className="space-y-3">
+        <Label htmlFor="phone">Mobile number</Label>
+        <Input
+          id="phone"
+          type="tel"
+          inputMode="numeric"
+          placeholder="10-digit mobile for UPI"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          autoComplete="tel"
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Required for GPay, PhonePe and other UPI apps in the Razorpay window.
+        </p>
+      </div>
+
       <Button
         onClick={startCheckout}
         disabled={loading || !scriptReady}
@@ -156,7 +192,9 @@ export function CheckoutForm({ defaultEmail, defaultName, appName }: Props) {
       </Button>
 
       <p className="text-xs text-muted-foreground">
-        Secure payments by Razorpay. UPI, cards, net-banking, wallets and more.
+        After clicking Pay, choose <strong>UPI</strong> or the{" "}
+        <strong>GPay / PhonePe</strong> section in the Razorpay popup. On mobile,
+        UPI apps open directly; on desktop you may see a QR code.
       </p>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

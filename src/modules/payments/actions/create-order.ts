@@ -6,6 +6,7 @@ import { getCurrentCart } from "@/modules/cart";
 import { createRazorpayOrder } from "@/modules/payments/services/razorpay";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { normalizeIndianPhone } from "@/modules/payments/lib/phone";
 
 export type CreateRazorpayOrderResult =
   | {
@@ -15,13 +16,14 @@ export type CreateRazorpayOrderResult =
       currency: string;
       keyId: string;
       cartId: string;
-      prefill: { email: string; name?: string };
+      prefill: { email: string; name?: string; contact: string };
     }
   | { ok: false; error: string };
 
 export async function createRazorpayCheckoutOrderAction(args: {
   email: string;
   name?: string;
+  phone: string;
 }): Promise<CreateRazorpayOrderResult> {
   const publicKeyId = env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET || !publicKeyId) {
@@ -45,10 +47,19 @@ export async function createRazorpayCheckoutOrderAction(args: {
     return { ok: false, error: "Cart is empty" };
   }
 
+  const contact = normalizeIndianPhone(args.phone);
+  if (!contact) {
+    return {
+      ok: false,
+      error: "Enter a valid 10-digit Indian mobile number for UPI payments.",
+    };
+  }
+
   try {
     const order = await createRazorpayOrder({
       cart,
       email: args.email,
+      phone: contact,
       userId: user?.id ?? null,
     });
     return {
@@ -58,7 +69,11 @@ export async function createRazorpayCheckoutOrderAction(args: {
       currency: order.currency,
       keyId: publicKeyId,
       cartId: cart.id,
-      prefill: { email: args.email, name: args.name ?? user?.name ?? undefined },
+      prefill: {
+        email: args.email,
+        name: args.name ?? user?.name ?? undefined,
+        contact,
+      },
     };
   } catch (err) {
     return {
