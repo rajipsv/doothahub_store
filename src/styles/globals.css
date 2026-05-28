@@ -26,30 +26,16 @@
     --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+  /* Storefront light: cyan brand accents */
+  .storefront {
+    --primary: 187 85% 38%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 187 85% 38%;
+    --radius: 0.75rem;
   }
 
-  /* Storefront: dark tech palette (cyan + violet accents) */
-  .storefront.dark {
+  /* Site-wide dark: tech palette (cyan + violet) */
+  .dark {
     --background: 222 47% 5%;
     --foreground: 210 40% 96%;
     --card: 222 40% 8%;
@@ -64,6 +50,8 @@
     --muted-foreground: 215 20% 58%;
     --accent: 260 55% 22%;
     --accent-foreground: 210 40% 96%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
     --border: 222 25% 16%;
     --input: 222 25% 16%;
     --ring: 187 92% 48%;
@@ -74,19 +62,43 @@
 @layer utilities {
   .store-grid-bg {
     background-image:
-      linear-gradient(to right, hsl(222 25% 14% / 0.4) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(222 25% 14% / 0.4) 1px, transparent 1px);
+      linear-gradient(to right, hsl(220 13% 91% / 0.9) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(220 13% 91% / 0.9) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
+  .dark .store-grid-bg {
+    background-image:
+      linear-gradient(to right, hsl(222 25% 14% / 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(222 25% 14% / 0.4) 1px, transparent 1px);
+  }
+
   .text-gradient-tech {
+    @apply bg-gradient-to-r from-cyan-600 via-sky-600 to-violet-600 bg-clip-text text-transparent;
+  }
+
+  .dark .text-gradient-tech {
     @apply bg-gradient-to-r from-cyan-400 via-sky-300 to-violet-400 bg-clip-text text-transparent;
   }
 
   .glow-primary {
     box-shadow:
+      0 0 24px hsl(187 92% 48% / 0.25),
+      0 0 64px hsl(260 80% 60% / 0.08);
+  }
+
+  .dark .glow-primary {
+    box-shadow:
       0 0 24px hsl(187 92% 48% / 0.35),
       0 0 64px hsl(260 80% 60% / 0.12);
+  }
+
+  .surface-glass {
+    @apply border border-border/80 bg-card/80 backdrop-blur;
+  }
+
+  .dark .surface-glass {
+    @apply border-white/10 bg-card/80;
   }
 }
 

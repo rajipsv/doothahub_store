@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireRole, SignOutButton } from "@/modules/auth";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
@@ -35,7 +36,8 @@ export default async function AdminLayout({
           >
             ← Back to store
           </Link>
-          <div className="pt-2">
+          <div className="flex items-center gap-2 pt-2">
+            <ThemeToggle />
             <SignOutButton variant="link" />
           </div>
         </nav>
@@ -48,7 +50,8 @@ export default async function AdminLayout({
             <Link href="/admin" className="font-bold">
               DoothaHub Admin
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Link
                 href="/"
                 className="text-xs text-muted-foreground hover:underline"

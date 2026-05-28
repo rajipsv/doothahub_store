@@ -36,7 +36,7 @@ export default async function HomePage() {
         />
 
         <div className="container relative flex min-h-[88vh] flex-col items-center justify-center py-20 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-cyan-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
             <Sparkles className="h-3.5 w-3.5" />
             Next-gen shopping
           </div>
@@ -69,7 +69,7 @@ export default async function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white/15 bg-white/5 backdrop-blur hover:bg-white/10 hover:text-foreground"
+                className="border-border bg-muted/50 backdrop-blur hover:bg-muted dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10"
               >
                 <Link href={`/categories/${categories[0].slug}`}>
                   {categories[0].name}
@@ -78,21 +78,21 @@ export default async function HomePage() {
             ) : null}
           </div>
 
-          <div className="mt-16 grid w-full max-w-2xl grid-cols-3 gap-6 border-t border-white/10 pt-10 text-center text-sm">
+          <div className="mt-16 grid w-full max-w-2xl grid-cols-3 gap-6 border-t border-border pt-10 text-center text-sm dark:border-white/10">
             <div>
-              <p className="font-display text-2xl font-bold text-cyan-400">
+              <p className="font-display text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                 {featured.length > 0 ? `${featured.length}+` : "—"}
               </p>
               <p className="mt-1 text-muted-foreground">Featured picks</p>
             </div>
             <div>
-              <p className="font-display text-2xl font-bold text-violet-400">
+              <p className="font-display text-2xl font-bold text-violet-600 dark:text-violet-400">
                 {categories.length > 0 ? categories.length : "—"}
               </p>
               <p className="mt-1 text-muted-foreground">Categories</p>
             </div>
             <div>
-              <p className="font-display flex items-center justify-center gap-1 text-2xl font-bold text-sky-400">
+              <p className="font-display flex items-center justify-center gap-1 text-2xl font-bold text-sky-600 dark:text-sky-400">
                 <Zap className="h-5 w-5" />
                 INR
               </p>
@@ -106,7 +106,7 @@ export default async function HomePage() {
         <section className="container py-16 md:py-20">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+              <p className="text-xs font-semibold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                 Browse
               </p>
               <h2 className="font-display mt-1 text-2xl font-bold tracking-tight md:text-3xl">
@@ -119,7 +119,7 @@ export default async function HomePage() {
               <Link
                 key={c.id}
                 href={`/categories/${c.slug}`}
-                className="group relative overflow-hidden rounded-xl border border-white/10 bg-card/80 p-6 text-center backdrop-blur transition-all hover:border-cyan-500/40 hover:shadow-[0_0_32px_hsl(187_92%_48%_/0.15)]"
+                className="group surface-glass relative overflow-hidden rounded-xl p-6 text-center transition-all hover:border-primary/40 hover:shadow-[0_0_32px_hsl(187_92%_48%_/0.15)]"
               >
                 <div
                   className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-violet-600/10 opacity-0 transition-opacity group-hover:opacity-100"
@@ -138,11 +138,11 @@ export default async function HomePage() {
       ) : null}
 
       {featured.length > 0 ? (
-        <section className="border-t border-white/10 bg-muted/30 py-16 md:py-20">
+        <section className="border-t border-border bg-muted/30 py-16 md:py-20 dark:border-white/10">
           <div className="container">
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">
+                <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
                   Trending
                 </p>
                 <h2 className="font-display mt-1 text-2xl font-bold tracking-tight md:text-3xl">
@@ -152,7 +152,7 @@ export default async function HomePage() {
               <Button
                 asChild
                 variant="ghost"
-                className="text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
+                className="text-primary hover:bg-primary/10"
               >
                 <Link href="/products">
                   View all
@@ -167,7 +167,7 @@ export default async function HomePage() {
 
       {!hasContent ? (
         <section className="container py-20">
-          <div className="mx-auto max-w-xl rounded-xl border border-white/10 bg-card/80 p-8 text-center backdrop-blur">
+          <div className="surface-glass mx-auto max-w-xl rounded-xl p-8 text-center">
             <h2 className="font-display text-xl font-semibold">
               Catalogue coming online
             </h2>
@@ -175,8 +175,8 @@ export default async function HomePage() {
               Your storefront is live — add products from the admin panel or
               import a CSV.
             </p>
-            <div className="mt-6 rounded-lg border border-white/10 bg-muted/50 p-4 text-left">
-              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-400">
+            <div className="mt-6 rounded-lg border border-border bg-muted/50 p-4 text-left dark:border-white/10">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600 dark:text-cyan-400">
                 Quick start
               </p>
               <pre className="mt-2 overflow-x-auto text-xs text-muted-foreground">

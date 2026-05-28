@@ -11,7 +11,7 @@ const display = Space_Grotesk({
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`storefront dark ${display.variable} flex min-h-screen flex-col bg-background font-sans text-foreground`}
+      className={`storefront ${display.variable} flex min-h-screen flex-col bg-background font-sans text-foreground`}
     >
       <Header />
       <main className="flex-1">{children}</main>

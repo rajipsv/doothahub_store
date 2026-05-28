@@ -3,6 +3,7 @@ import { ShoppingBag, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getOptionalUser, SignOutButton } from "@/modules/auth";
 import { getCartCount } from "@/modules/cart";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 export async function Header() {
   const user = await getOptionalUser();
@@ -10,7 +11,7 @@ export async function Header() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/70 backdrop-blur-xl dark:border-white/10">
       <div className="container grid h-[4.5rem] grid-cols-[1fr_auto_1fr] items-center md:h-20">
         <div aria-hidden className="min-w-0" />
         <Link
@@ -19,7 +20,8 @@ export async function Header() {
         >
           <span className="text-gradient-tech">DoothaHub</span>
         </Link>
-        <div className="flex min-w-0 items-center justify-end gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+          <ThemeToggle />
           {isAdmin ? (
             <Button asChild variant="ghost" size="sm">
               <Link href="/admin">

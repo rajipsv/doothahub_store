@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,8 +46,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
-        <PostHogProvider>{children}</PostHogProvider>
-        <Toaster />
+        <ThemeProvider>
+          <PostHogProvider>{children}</PostHogProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

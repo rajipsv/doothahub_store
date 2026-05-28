@@ -10,7 +10,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block overflow-hidden rounded-xl border border-white/10 bg-card/80 backdrop-blur transition-all hover:border-cyan-500/30 hover:shadow-[0_0_28px_hsl(187_92%_48%_/0.12)]"
+      className="group surface-glass block overflow-hidden rounded-xl transition-all hover:border-primary/40 hover:shadow-[0_0_28px_hsl(187_92%_48%_/0.12)]"
     >
       <div className="relative aspect-square overflow-hidden bg-muted/80">
         {image ? (

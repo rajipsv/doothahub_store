@@ -10,7 +10,7 @@ export default async function AccountLayout({
 }) {
   await requireUser();
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="storefront flex min-h-screen flex-col bg-background">
       <Header />
       <div className="container flex-1 py-10">
         <div className="grid gap-8 md:grid-cols-[200px_1fr]">
