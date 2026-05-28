@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   getCachedProductBySlug,
   ProductDetail,
+  ProductImageGallery,
 } from "@/modules/catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { addItemAction } from "@/modules/cart";
@@ -121,7 +122,10 @@ export default async function ProductPage({
         / <span className="text-foreground">{product.title}</span>
       </nav>
 
-      <ProductDetail product={product} onAddToCart={handleAdd} />
+      <div className="grid gap-8 md:grid-cols-2">
+        <ProductImageGallery images={product.images} title={product.title} />
+        <ProductDetail product={product} onAddToCart={handleAdd} />
+      </div>
 
       {productLd ? <JsonLd data={productLd} /> : null}
       <JsonLd data={breadcrumbLd} />

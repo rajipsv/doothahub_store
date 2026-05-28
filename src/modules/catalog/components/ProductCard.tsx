@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PriceTag } from "@/modules/catalog/components/PriceTag";
 import { getVariantDisplayLabel } from "@/modules/catalog/lib/variant-display";
+import { normalizeProductImageUrl } from "@/modules/catalog/lib/product-image-url";
 import type { ProductCardData } from "@/modules/catalog/types";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
@@ -23,7 +24,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <div className="relative aspect-square overflow-hidden bg-muted/80">
         {image ? (
           <Image
-            src={image.url}
+            src={normalizeProductImageUrl(image.url)}
             alt={image.alt ?? product.title}
             fill
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"

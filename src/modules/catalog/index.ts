@@ -35,6 +35,7 @@ export type {
 export { ProductCard } from "@/modules/catalog/components/ProductCard";
 export { ProductGrid } from "@/modules/catalog/components/ProductGrid";
 export { ProductDetail } from "@/modules/catalog/components/ProductDetail";
+export { ProductImageGallery } from "@/modules/catalog/components/ProductImageGallery";
 export { VariantPicker } from "@/modules/catalog/components/VariantPicker";
 export { PriceTag } from "@/modules/catalog/components/PriceTag";
 export { CategoryTree } from "@/modules/catalog/components/CategoryTree";
