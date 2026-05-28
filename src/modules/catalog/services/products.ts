@@ -23,6 +23,8 @@ const cardSelect = {
       priceCents: true,
       comparePriceCents: true,
       currency: true,
+      weightGrams: true,
+      attributes: true,
     },
     where: { deletedAt: null },
     orderBy: { priceCents: "asc" },

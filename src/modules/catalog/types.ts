@@ -13,7 +13,15 @@ export type ProductCardData = Pick<
   brand: Pick<Brand, "id" | "name" | "slug"> | null;
   category: Pick<Category, "id" | "name" | "slug">;
   images: Pick<ProductImage, "id" | "url" | "alt">[];
-  variants: Pick<ProductVariant, "id" | "priceCents" | "comparePriceCents" | "currency">[];
+  variants: Pick<
+    ProductVariant,
+    | "id"
+    | "priceCents"
+    | "comparePriceCents"
+    | "currency"
+    | "weightGrams"
+    | "attributes"
+  >[];
 };
 
 export type ProductDetail = Product & {
