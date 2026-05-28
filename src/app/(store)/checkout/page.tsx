@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { CheckoutForm } from "@/modules/checkout";
-import { buildPickupSlots } from "@/modules/checkout/lib/pickup-slots";
-import { getCurrentCart } from "@/modules/cart";
-import { splitCartByPickupEligibility } from "@/modules/cart/services/pickup-eligibility";
-import { toCartSplitSummary } from "@/modules/cart/lib/cart-split-summary";
-import { CartSummary } from "@/modules/cart";
+import { CheckoutForm, buildPickupSlots } from "@/modules/checkout";
+import {
+  CartSummary,
+  getCurrentCart,
+  splitCartByPickupEligibility,
+  toCartSplitSummary,
+} from "@/modules/cart";
 import { getOptionalUser } from "@/modules/auth";
 import {
   env,
