@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PriceTag } from "@/modules/catalog/components/PriceTag";
 import { getVariantDisplayLabel } from "@/modules/catalog/lib/variant-display";
 import { normalizeProductImageUrl } from "@/modules/catalog/lib/product-image-url";
+import { isPickupEligible } from "@/lib/pickup-eligibility";
 import type { ProductCardData } from "@/modules/catalog/types";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
@@ -43,7 +44,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </p>
         ) : null}
         <h3 className="line-clamp-2 text-sm font-medium">{product.title}</h3>
-        {product.pickupEligible ? (
+        {isPickupEligible({
+          productPickupEligible: product.pickupEligible,
+          categoryPickupEligible: product.category.pickupEligible,
+        }) ? (
           <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             Store pickup available
           </p>

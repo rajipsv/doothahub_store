@@ -41,7 +41,10 @@ const lineSelect = {
     variant: {
       include: {
         product: {
-          include: { images: { orderBy: { position: "asc" }, take: 1 } },
+          include: {
+            category: { select: { pickupEligible: true } },
+            images: { orderBy: { position: "asc" }, take: 1 },
+          },
         },
       },
     },

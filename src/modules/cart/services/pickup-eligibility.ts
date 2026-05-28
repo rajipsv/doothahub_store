@@ -1,5 +1,13 @@
 import "server-only";
+import { isPickupEligible } from "@/lib/pickup-eligibility";
 import type { CartLineItem, FullCart } from "@/modules/cart/types";
+
+function lineIsPickupEligible(item: CartLineItem): boolean {
+  return isPickupEligible({
+    productPickupEligible: item.variant.product.pickupEligible,
+    categoryPickupEligible: item.variant.product.category.pickupEligible,
+  });
+}
 
 export type CartSplit = {
   pickupLines: CartLineItem[];
@@ -35,10 +43,8 @@ export function calcSubsetTotals(items: CartLineItem[], discountCents = 0) {
 }
 
 export function splitCartByPickupEligibility(cart: FullCart): CartSplit {
-  const pickupLines = cart.items.filter((it) => it.variant.product.pickupEligible);
-  const deliveryLines = cart.items.filter(
-    (it) => !it.variant.product.pickupEligible,
-  );
+  const pickupLines = cart.items.filter((it) => lineIsPickupEligible(it));
+  const deliveryLines = cart.items.filter((it) => !lineIsPickupEligible(it));
 
   const pickupTotals = calcSubsetTotals(pickupLines);
   const deliveryTotals = calcSubsetTotals(deliveryLines);
@@ -62,7 +68,7 @@ export function splitCartByPickupEligibility(cart: FullCart): CartSplit {
 }
 
 export function assertPickupLinesEligible(lines: CartLineItem[]): void {
-  const bad = lines.filter((it) => !it.variant.product.pickupEligible);
+  const bad = lines.filter((it) => !lineIsPickupEligible(it));
   if (bad.length > 0) {
     const names = bad.map((it) => it.variant.product.title).join(", ");
     throw new Error(`These items are not available for pickup: ${names}`);

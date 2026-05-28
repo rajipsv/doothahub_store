@@ -1,8 +1,18 @@
-import type { Cart, CartItem, ProductImage, ProductVariant, Product } from "@prisma/client";
+import type {
+  Cart,
+  CartItem,
+  Category,
+  ProductImage,
+  ProductVariant,
+  Product,
+} from "@prisma/client";
 
 export type CartLineItem = CartItem & {
   variant: ProductVariant & {
-    product: Product & { images: ProductImage[] };
+    product: Product & {
+      images: ProductImage[];
+      category: Pick<Category, "pickupEligible">;
+    };
   };
 };
 

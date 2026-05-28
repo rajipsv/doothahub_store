@@ -5,6 +5,7 @@ import {
   TaxonomyManager,
   createCategoryAction,
   deleteCategoryAction,
+  toggleCategoryPickupEligibleAction,
 } from "@/modules/admin";
 
 export const metadata: Metadata = { title: "Categories" };
@@ -25,6 +26,7 @@ export default async function AdminCategoriesPage() {
         name: c.name,
         slug: c.slug,
         productCount: c._count.products,
+        pickupEligible: c.pickupEligible,
       }));
     },
     [],
@@ -36,7 +38,9 @@ export default async function AdminCategoriesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Categories appear in the product form and storefront navigation.
+          Turn store pickup on per category. When category pickup is off, every
+          product in that category is delivery-only. When on, enable pickup per
+          product on the Products page.
         </p>
       </div>
       <TaxonomyManager
@@ -44,6 +48,7 @@ export default async function AdminCategoriesPage() {
         rows={rows}
         createAction={createCategoryAction}
         deleteAction={deleteCategoryAction}
+        pickupToggleAction={toggleCategoryPickupEligibleAction}
       />
     </div>
   );

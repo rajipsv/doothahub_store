@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/modules/auth";
 import { db } from "@/lib/db";
-import { bustCategoryCaches } from "@/lib/cache";
+import { bustCategoryCaches, bustProductCaches } from "@/lib/cache";
 import { slugify } from "@/lib/utils";
 
 function revalidateStorefrontCategoryPaths() {
@@ -44,7 +44,10 @@ export async function createCategoryAction(
   }
   const slug = parsed.data.slug ?? slugify(parsed.data.name);
   try {
-    await db.category.create({ data: { name: parsed.data.name, slug } });
+    const pickupEligible = fd.get("pickupEligible") === "on";
+    await db.category.create({
+      data: { name: parsed.data.name, slug, pickupEligible },
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("Unique") || msg.includes("unique")) {
@@ -57,6 +60,30 @@ export async function createCategoryAction(
   revalidatePath("/admin/products");
   revalidateStorefrontCategoryPaths();
   return { ok: true };
+}
+
+export async function toggleCategoryPickupEligibleAction(
+  fd: FormData,
+): Promise<void> {
+  await requireRole("ADMIN");
+  const id = fd.get("id");
+  const value = fd.get("pickupEligible");
+  if (typeof id !== "string") return;
+
+  const category = await db.category.update({
+    where: { id },
+    data: { pickupEligible: value === "true" },
+    select: { slug: true },
+  });
+  const products = await db.product.findMany({
+    where: { categoryId: id, deletedAt: null },
+    select: { slug: true },
+  });
+  bustCategoryCaches(category.slug);
+  for (const p of products) bustProductCaches(p.slug);
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/products");
+  revalidateStorefrontCategoryPaths();
 }
 
 export async function deleteCategoryAction(fd: FormData): Promise<void> {

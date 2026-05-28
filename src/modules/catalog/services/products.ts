@@ -12,7 +12,7 @@ const cardSelect = {
   pickupEligible: true,
   shortDescription: true,
   brand: { select: { id: true, name: true, slug: true } },
-  category: { select: { id: true, name: true, slug: true } },
+  category: { select: { id: true, name: true, slug: true, pickupEligible: true } },
   images: {
     select: { id: true, url: true, alt: true },
     orderBy: { position: "asc" },

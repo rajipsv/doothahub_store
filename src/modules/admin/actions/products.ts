@@ -71,6 +71,19 @@ export async function createProductAction(formData: FormData) {
     };
   }
 
+  if (parsed.data.pickupEligible) {
+    const category = await db.category.findFirst({
+      where: { id: parsed.data.categoryId, deletedAt: null },
+      select: { pickupEligible: true },
+    });
+    if (!category?.pickupEligible) {
+      return {
+        ok: false,
+        error: "Enable store pickup on the category before marking this product pickup-eligible.",
+      };
+    }
+  }
+
   const created = await db.product.create({
     data: {
       title: parsed.data.title,
@@ -101,9 +114,27 @@ export async function togglePickupEligibleAction(
   const value = formData.get("pickupEligible");
   if (typeof id !== "string") return;
 
+  const enabling = value === "true";
+  if (enabling) {
+    const existing = await db.product.findUnique({
+      where: { id },
+      select: { categoryId: true },
+    });
+    if (!existing) return;
+    const category = await db.category.findFirst({
+      where: { id: existing.categoryId, deletedAt: null },
+      select: { pickupEligible: true },
+    });
+    if (!category?.pickupEligible) {
+      throw new Error(
+        "Enable store pickup on the category before turning pickup on for this product.",
+      );
+    }
+  }
+
   const product = await db.product.update({
     where: { id },
-    data: { pickupEligible: value === "true" },
+    data: { pickupEligible: enabling },
   });
   bustProductCaches(product.slug);
   revalidatePath("/admin/products");

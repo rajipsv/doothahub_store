@@ -11,7 +11,7 @@ export type ProductCardData = Pick<
   "id" | "slug" | "title" | "shortDescription" | "pickupEligible"
 > & {
   brand: Pick<Brand, "id" | "name" | "slug"> | null;
-  category: Pick<Category, "id" | "name" | "slug">;
+  category: Pick<Category, "id" | "name" | "slug" | "pickupEligible">;
   images: Pick<ProductImage, "id" | "url" | "alt">[];
   variants: Pick<
     ProductVariant,

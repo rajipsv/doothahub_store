@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 type ProductRow = Prisma.ProductGetPayload<{
   include: {
     variants: true;
-    category: { select: { name: true } };
+    category: { select: { name: true; pickupEligible: true } };
     brand: { select: { name: true } };
   };
 }>;
@@ -73,7 +73,7 @@ export default async function AdminProductsPage({
           where,
           include: {
             variants: { take: 1, orderBy: { priceCents: "asc" } },
-            category: { select: { name: true } },
+            category: { select: { name: true, pickupEligible: true } },
             brand: { select: { name: true } },
           },
           orderBy: { createdAt: "desc" },
@@ -112,6 +112,7 @@ export default async function AdminProductsPage({
     priceCents: p.variants[0]?.priceCents ?? 0,
     inventory: p.variants.reduce((acc, v) => acc + v.inventoryQty, 0),
     pickupEligible: p.pickupEligible,
+    categoryPickupEligible: p.category?.pickupEligible ?? false,
   }));
 
   const hasCategories = categories.length > 0;
@@ -142,6 +143,7 @@ export default async function AdminProductsPage({
                 categories={categories.map((c) => ({
                   id: c.id,
                   name: c.name,
+                  pickupEligible: c.pickupEligible,
                 }))}
                 brands={brands.map((b) => ({ id: b.id, name: b.name }))}
                 cloudinary={{

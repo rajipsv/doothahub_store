@@ -22,7 +22,8 @@ import { createProductAction } from "@/modules/admin/actions/products";
 import { uploadToCloudinary } from "@/modules/admin/lib/upload";
 import { buildVariantSku, slugify } from "@/lib/utils";
 
-type Option = { id: string; name: string };
+type CategoryOption = { id: string; name: string; pickupEligible: boolean };
+type BrandOption = { id: string; name: string };
 
 type VariantRow = {
   sku: string;
@@ -68,8 +69,8 @@ export function ProductFormDrawer({
   brands,
   cloudinary,
 }: {
-  categories: Option[];
-  brands: Option[];
+  categories: CategoryOption[];
+  brands: BrandOption[];
   cloudinary: {
     cloudName?: string | null;
     apiKey?: string | null;
@@ -84,7 +85,10 @@ export function ProductFormDrawer({
 
   const [title, setTitle] = React.useState("");
   const [slug, setSlug] = React.useState("");
+  const [categoryId, setCategoryId] = React.useState("");
   const slugTouchedRef = React.useRef(false);
+  const categoryAllowsPickup = categories.find((c) => c.id === categoryId)
+    ?.pickupEligible;
   const skuTouchedRef = React.useRef<boolean[]>([false]);
 
   function syncVariantsSkus(nextSlug: string, rows: VariantRow[]) {
@@ -113,6 +117,7 @@ export function ProductFormDrawer({
     setVariants([{ ...DEFAULT_VARIANT }]);
     setTitle("");
     setSlug("");
+    setCategoryId("");
     slugTouchedRef.current = false;
     skuTouchedRef.current = [false];
   }
@@ -197,7 +202,12 @@ export function ProductFormDrawer({
 
           <div>
             <Label htmlFor="categoryId">Category</Label>
-            <Select name="categoryId">
+            <Select
+              name="categoryId"
+              value={categoryId || undefined}
+              onValueChange={setCategoryId}
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -205,6 +215,7 @@ export function ProductFormDrawer({
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
+                    {c.pickupEligible ? "" : " (pickup off)"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -230,14 +241,30 @@ export function ProductFormDrawer({
             </p>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="pickupEligible"
-              className="h-4 w-4 rounded border"
-            />
-            Available for store pickup
-          </label>
+          <div className="space-y-1">
+            <label
+              className={`flex items-center gap-2 text-sm ${categoryAllowsPickup ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+            >
+              <input
+                type="checkbox"
+                name="pickupEligible"
+                className="h-4 w-4 rounded border"
+                disabled={!categoryAllowsPickup}
+              />
+              Available for store pickup
+            </label>
+            {!categoryId ? (
+              <p className="text-xs text-muted-foreground">
+                Select a category first. Pickup can only be enabled when the
+                category allows it (Admin → Categories).
+              </p>
+            ) : !categoryAllowsPickup ? (
+              <p className="text-xs text-muted-foreground">
+                This category has store pickup off. Turn it on under Admin →
+                Categories to enable pickup for this product.
+              </p>
+            ) : null}
+          </div>
 
           <div>
             <Label htmlFor="status">Status</Label>

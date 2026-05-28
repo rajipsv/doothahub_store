@@ -35,6 +35,7 @@ type Row = {
   priceCents: number;
   inventory: number;
   pickupEligible: boolean;
+  categoryPickupEligible: boolean;
 };
 
 const col = createColumnHelper<Row>();
@@ -42,10 +43,26 @@ const col = createColumnHelper<Row>();
 function PickupToggle({
   id,
   pickupEligible,
+  categoryPickupEligible,
 }: {
   id: string;
   pickupEligible: boolean;
+  categoryPickupEligible: boolean;
 }) {
+  if (!categoryPickupEligible) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled
+        title="Enable store pickup on the category first (Admin → Categories)"
+      >
+        Category pickup off
+      </Button>
+    );
+  }
+
   return (
     <form action={togglePickupEligibleAction}>
       <input type="hidden" name="id" value={id} />
@@ -118,6 +135,7 @@ const columns = [
       <PickupToggle
         id={info.row.original.id}
         pickupEligible={info.getValue()}
+        categoryPickupEligible={info.row.original.categoryPickupEligible}
       />
     ),
   }),

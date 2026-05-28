@@ -31,6 +31,7 @@ export {
 export {
   createCategoryAction,
   deleteCategoryAction,
+  toggleCategoryPickupEligibleAction,
   createBrandAction,
   deleteBrandAction,
   type TaxonomyResult,

@@ -147,10 +147,11 @@ model Category {
   id       String     @id @default(uuid()) @db.Uuid
   tenantId String?    @db.Uuid
   parentId String?    @db.Uuid
-  name     String
-  slug     String     @unique
-  imageUrl String?
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  name           String
+  slug           String     @unique
+  imageUrl       String?
+  pickupEligible Boolean    @default(false)
+  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children Category[] @relation("CategoryTree")
 
   products Product[]

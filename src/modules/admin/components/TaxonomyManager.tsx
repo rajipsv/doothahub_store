@@ -13,6 +13,7 @@ type Row = {
   name: string;
   slug: string;
   productCount: number;
+  pickupEligible?: boolean;
 };
 
 export function TaxonomyManager({
@@ -20,11 +21,14 @@ export function TaxonomyManager({
   rows,
   createAction,
   deleteAction,
+  pickupToggleAction,
 }: {
   label: string;
   rows: Row[];
   createAction: (fd: FormData) => Promise<TaxonomyResult>;
   deleteAction: (fd: FormData) => Promise<void>;
+  /** When set (categories), show category-level store pickup controls. */
+  pickupToggleAction?: (fd: FormData) => Promise<void>;
 }) {
   const [name, setName] = React.useState("");
   const [slug, setSlug] = React.useState("");
@@ -101,6 +105,16 @@ export function TaxonomyManager({
           <Button type="submit" disabled={pending}>
             {pending ? "Saving..." : `Add ${label}`}
           </Button>
+          {pickupToggleAction ? (
+            <label className="flex items-center gap-2 text-sm sm:col-span-3">
+              <input
+                type="checkbox"
+                name="pickupEligible"
+                className="h-4 w-4 rounded border"
+              />
+              Allow store pickup for products in this category
+            </label>
+          ) : null}
         </form>
         {error ? (
           <p className="mt-2 text-sm text-destructive">{error}</p>
@@ -126,23 +140,47 @@ export function TaxonomyManager({
                     {r.productCount === 1 ? "" : "s"}
                   </p>
                 </div>
-                <form action={deleteAction} onSubmit={confirmDelete(r.name)}>
-                  <input type="hidden" name="id" value={r.id} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    title={
-                      r.productCount > 0
-                        ? `Used by ${r.productCount} product(s); delete those first`
-                        : "Delete"
-                    }
-                  >
-                    <Trash2 className="mr-1 h-4 w-4" />
-                    Delete
-                  </Button>
-                </form>
+                <div className="flex shrink-0 items-center gap-2">
+                  {pickupToggleAction && r.pickupEligible !== undefined ? (
+                    <form action={pickupToggleAction}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <input
+                        type="hidden"
+                        name="pickupEligible"
+                        value={r.pickupEligible ? "false" : "true"}
+                      />
+                      <Button
+                        type="submit"
+                        variant={r.pickupEligible ? "default" : "outline"}
+                        size="sm"
+                        title={
+                          r.pickupEligible
+                            ? "Pickup on for category — products can be toggled individually"
+                            : "Pickup off — all products in this category are delivery-only"
+                        }
+                      >
+                        {r.pickupEligible ? "Pickup on" : "Pickup off"}
+                      </Button>
+                    </form>
+                  ) : null}
+                  <form action={deleteAction} onSubmit={confirmDelete(r.name)}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      title={
+                        r.productCount > 0
+                          ? `Used by ${r.productCount} product(s); delete those first`
+                          : "Delete"
+                      }
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>
