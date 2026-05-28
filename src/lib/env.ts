@@ -77,6 +77,8 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
     NEXT_PUBLIC_APP_NAME: z.string().default("DoothaHub Store"),
+    NEXT_PUBLIC_PICKUP_LOCATION_NAME: optionalNonEmpty,
+    NEXT_PUBLIC_PICKUP_ADDRESS: optionalNonEmpty,
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -87,6 +89,9 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_PICKUP_LOCATION_NAME:
+      process.env.NEXT_PUBLIC_PICKUP_LOCATION_NAME,
+    NEXT_PUBLIC_PICKUP_ADDRESS: process.env.NEXT_PUBLIC_PICKUP_ADDRESS,
   },
   emptyStringAsUndefined: true,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
@@ -102,3 +107,13 @@ export const isRazorpayConfigured = Boolean(
 
 /** Cash on delivery at checkout. Set COD_ENABLED=false to disable. */
 export const isCodEnabled = process.env.COD_ENABLED !== "false";
+
+/** Store pickup at checkout. Set PICKUP_ENABLED=false to disable. */
+export const isPickupEnabled = process.env.PICKUP_ENABLED !== "false";
+
+export const pickupLocationName =
+  process.env.NEXT_PUBLIC_PICKUP_LOCATION_NAME?.trim() ||
+  "DoothaHub Store";
+
+export const pickupLocationAddress =
+  process.env.NEXT_PUBLIC_PICKUP_ADDRESS?.trim() || "";

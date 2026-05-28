@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PaymentMethod } from "@prisma/client";
+import { FulfillmentType, PaymentMethod } from "@prisma/client";
 import { getOptionalUser } from "@/modules/auth";
 import { getCurrentCart } from "@/modules/cart";
 import { createOrderFromCart } from "@/modules/orders";
 import { createCheckoutAddress } from "@/modules/checkout/services/address";
-import { placeCodOrderSchema } from "@/modules/checkout/schemas/cod-order";
+import { placeCodOrderSchema } from "@/modules/checkout/schemas/checkout-order";
+import { findPickupSlotById } from "@/modules/checkout/lib/pickup-slots";
 import { sendOrderConfirmation } from "@/modules/payments/services/notify";
 import { normalizeIndianPhone } from "@/modules/payments/lib/phone";
 import { checkoutLimiter } from "@/lib/rate-limit";
@@ -27,7 +28,7 @@ export async function placeCodOrderAction(
 
   const parsed = placeCodOrderSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Please check your delivery details." };
+    return { ok: false, error: "Please check your order details." };
   }
 
   const contact = normalizeIndianPhone(parsed.data.phone);
@@ -52,27 +53,43 @@ export async function placeCodOrderAction(
   }
 
   try {
-    const address = await createCheckoutAddress({
-      userId: user?.id ?? null,
-      input: {
-        email: parsed.data.email,
-        fullName: parsed.data.name,
-        line1: parsed.data.line1,
-        line2: parsed.data.line2,
-        city: parsed.data.city,
-        region: parsed.data.region,
-        postalCode: parsed.data.postalCode,
-        country: parsed.data.country,
-        phone: contact,
-      },
-    });
+    const isPickup = parsed.data.fulfillmentType === "PICKUP";
+    const pickupSlot = isPickup
+      ? findPickupSlotById(parsed.data.pickupSlotId!)
+      : null;
+
+    if (isPickup && !pickupSlot) {
+      return { ok: false, error: "Pickup time is no longer available." };
+    }
+
+    const address = isPickup
+      ? null
+      : await createCheckoutAddress({
+          userId: user?.id ?? null,
+          input: {
+            email: parsed.data.email,
+            fullName: parsed.data.name,
+            line1: parsed.data.line1!,
+            line2: parsed.data.line2,
+            city: parsed.data.city!,
+            region: parsed.data.region!,
+            postalCode: parsed.data.postalCode!,
+            country: parsed.data.country,
+            phone: contact,
+          },
+        });
 
     const order = await createOrderFromCart({
       userId: user?.id ?? null,
       email: parsed.data.email,
       cartId: cart.id,
       paymentMethod: PaymentMethod.COD,
-      shippingAddressId: address.id,
+      fulfillmentType: isPickup
+        ? FulfillmentType.PICKUP
+        : FulfillmentType.DELIVERY,
+      pickupSlotAt: pickupSlot ? new Date(pickupSlot.startsAt) : null,
+      pickupSlotLabel: pickupSlot?.label ?? null,
+      shippingAddressId: address?.id,
     });
 
     await sendOrderConfirmation(order.id).catch((err) => {

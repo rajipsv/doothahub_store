@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { placeCodOrderAction } from "@/modules/checkout/actions/place-cod-order";
+import type { PickupSlot } from "@/modules/checkout/lib/pickup-slots";
 import {
   createRazorpayCheckoutOrderAction,
   razorpayCheckoutDisplayConfig,
@@ -17,6 +18,7 @@ import {
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
 type PaymentChoice = "online" | "cod";
+type FulfillmentChoice = "DELIVERY" | "PICKUP";
 
 type RazorpaySuccessResponse = {
   razorpay_payment_id: string;
@@ -44,6 +46,10 @@ type Props = {
   appName?: string;
   codEnabled?: boolean;
   razorpayConfigured?: boolean;
+  pickupEnabled?: boolean;
+  pickupSlots?: PickupSlot[];
+  pickupLocationName?: string;
+  pickupLocationAddress?: string;
 };
 
 export function CheckoutForm({
@@ -53,10 +59,19 @@ export function CheckoutForm({
   appName,
   codEnabled = false,
   razorpayConfigured = false,
+  pickupEnabled = false,
+  pickupSlots = [],
+  pickupLocationName = "Store",
+  pickupLocationAddress = "",
 }: Props) {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentChoice>(
     codEnabled && !razorpayConfigured ? "cod" : "online",
+  );
+  const [fulfillmentType, setFulfillmentType] =
+    React.useState<FulfillmentChoice>("DELIVERY");
+  const [pickupSlotId, setPickupSlotId] = React.useState(
+    pickupSlots[0]?.id ?? "",
   );
   const [email, setEmail] = React.useState(defaultEmail ?? "");
   const [name, setName] = React.useState(defaultName ?? "");
@@ -72,6 +87,8 @@ export function CheckoutForm({
 
   const showOnline = razorpayConfigured;
   const showCod = codEnabled;
+  const isPickup = pickupEnabled && fulfillmentType === "PICKUP";
+  const needsAddress = !isPickup && paymentMethod === "cod";
 
   React.useEffect(() => {
     if (paymentMethod === "online" && !showOnline && showCod) {
@@ -81,6 +98,21 @@ export function CheckoutForm({
       setPaymentMethod("online");
     }
   }, [paymentMethod, showOnline, showCod]);
+
+  React.useEffect(() => {
+    if (pickupSlots.length > 0 && !pickupSlotId) {
+      setPickupSlotId(pickupSlots[0]!.id);
+    }
+  }, [pickupSlots, pickupSlotId]);
+
+  function validatePickup(): boolean {
+    if (!isPickup) return true;
+    if (!pickupSlotId) {
+      setError("Please select a pickup time");
+      return false;
+    }
+    return true;
+  }
 
   async function startOnlineCheckout() {
     setError(null);
@@ -92,6 +124,7 @@ export function CheckoutForm({
       setError("Mobile number is required for UPI (GPay, PhonePe)");
       return;
     }
+    if (!validatePickup()) return;
     if (typeof window === "undefined" || !window.Razorpay) {
       setError("Payment SDK is still loading. Try again in a moment.");
       return;
@@ -159,7 +192,11 @@ export function CheckoutForm({
       setError("Mobile number is required");
       return;
     }
-    if (!line1.trim() || !city.trim() || !region.trim() || !postalCode.trim()) {
+    if (!validatePickup()) return;
+    if (
+      needsAddress &&
+      (!line1.trim() || !city.trim() || !region.trim() || !postalCode.trim())
+    ) {
       setError("Please fill in your full delivery address");
       return;
     }
@@ -169,11 +206,13 @@ export function CheckoutForm({
       email,
       name,
       phone,
-      line1,
-      line2: line2 || undefined,
-      city,
-      region,
-      postalCode,
+      fulfillmentType,
+      pickupSlotId: isPickup ? pickupSlotId : undefined,
+      line1: needsAddress ? line1 : undefined,
+      line2: needsAddress ? line2 || undefined : undefined,
+      city: needsAddress ? city : undefined,
+      region: needsAddress ? region : undefined,
+      postalCode: needsAddress ? postalCode : undefined,
       country: "IN",
     });
     setLoading(false);
@@ -190,7 +229,12 @@ export function CheckoutForm({
     razorpaySignature: string;
     cartId: string;
   }) {
-    const res = await verifyAndPlaceOrderAction({ ...args, email });
+    const res = await verifyAndPlaceOrderAction({
+      ...args,
+      email,
+      fulfillmentType,
+      pickupSlotId: isPickup ? pickupSlotId : undefined,
+    });
     setLoading(false);
     if (!res.ok) {
       setError(res.error);
@@ -211,8 +255,56 @@ export function CheckoutForm({
   const onlineDisabled = loading || (showOnline && !scriptReady);
   const codDisabled = loading;
 
+  const submitLabel = loading
+    ? "Processing..."
+    : paymentMethod === "cod"
+      ? isPickup
+        ? "Place order (pay at pickup)"
+        : "Place order (cash on delivery)"
+      : scriptReady
+        ? "Pay with Razorpay"
+        : "Loading payment...";
+
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      {pickupEnabled ? (
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium">How do you want your order?</legend>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[:checked]:border-primary">
+            <input
+              type="radio"
+              name="fulfillmentType"
+              value="DELIVERY"
+              checked={fulfillmentType === "DELIVERY"}
+              onChange={() => setFulfillmentType("DELIVERY")}
+              className="mt-1"
+            />
+            <span>
+              <span className="font-medium">Home delivery</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                We deliver to your address
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[:checked]:border-primary">
+            <input
+              type="radio"
+              name="fulfillmentType"
+              value="PICKUP"
+              checked={fulfillmentType === "PICKUP"}
+              onChange={() => setFulfillmentType("PICKUP")}
+              className="mt-1"
+            />
+            <span>
+              <span className="font-medium">Store pickup</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Collect from our store at your chosen time
+              </span>
+            </span>
+          </label>
+        </fieldset>
+      ) : null}
+
       {showOnline && showCod ? (
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium">Payment method</legend>
@@ -242,9 +334,9 @@ export function CheckoutForm({
               className="mt-1"
             />
             <span>
-              <span className="font-medium">Cash on delivery</span>
+              <span className="font-medium">Pay on {isPickup ? "pickup" : "delivery"}</span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
-                Pay in cash when your order is delivered
+                Pay in cash when you {isPickup ? "collect your order" : "receive delivery"}
               </span>
             </span>
           </label>
@@ -296,7 +388,33 @@ export function CheckoutForm({
         />
       </div>
 
-      {paymentMethod === "cod" ? (
+      {isPickup ? (
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-sm font-semibold">Pickup details</p>
+          <div className="text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">{pickupLocationName}</p>
+            {pickupLocationAddress ? <p>{pickupLocationAddress}</p> : null}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pickupSlot">Pickup time</Label>
+            <select
+              id="pickupSlot"
+              value={pickupSlotId}
+              onChange={(e) => setPickupSlotId(e.target.value)}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {pickupSlots.map((slot) => (
+                <option key={slot.id} value={slot.id}>
+                  {slot.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
+
+      {needsAddress ? (
         <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
           <p className="text-sm font-semibold">Delivery address</p>
           <div className="space-y-3">
@@ -361,13 +479,7 @@ export function CheckoutForm({
         className="w-full"
         size="lg"
       >
-        {loading
-          ? "Processing..."
-          : paymentMethod === "cod"
-            ? "Place order (cash on delivery)"
-            : scriptReady
-              ? "Pay with Razorpay"
-              : "Loading payment..."}
+        {submitLabel}
       </Button>
 
       {paymentMethod === "online" && showOnline ? (
@@ -380,24 +492,19 @@ export function CheckoutForm({
               Cards).
             </li>
             <li>
-              <strong>On your phone:</strong> tap the PhonePe or Google Pay icon
-              (install the app first if needed).
+              <strong>On your phone:</strong> tap the PhonePe or Google Pay icon.
             </li>
             <li>
-              <strong>On a computer:</strong> use the QR code — open PhonePe or GPay
-              on your phone and scan it.
+              <strong>On a computer:</strong> scan the QR with PhonePe or GPay on
+              your phone.
             </li>
           </ol>
-          <p>
-            PhonePe does not appear as a separate button on our site; it is inside
-            Razorpay under UPI. If you do not see UPI at all, enable UPI in your
-            Razorpay Dashboard → Settings → Payment methods.
-          </p>
         </div>
       ) : paymentMethod === "cod" ? (
         <p className="text-xs text-muted-foreground">
-          Your order is confirmed immediately. Please keep exact cash ready for
-          the delivery person.
+          {isPickup
+            ? "Your order is confirmed. Please bring exact cash when you collect at the selected time."
+            : "Your order is confirmed. Please keep exact cash ready for the delivery person."}
         </p>
       ) : null}
 

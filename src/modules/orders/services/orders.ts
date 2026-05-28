@@ -1,5 +1,10 @@
 import "server-only";
-import { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
+import {
+  FulfillmentType,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCart, getCartById } from "@/modules/cart";
@@ -18,6 +23,9 @@ export async function createOrderFromCart(args: {
   email: string;
   cartId?: string;
   paymentMethod: PaymentMethod;
+  fulfillmentType?: FulfillmentType;
+  pickupSlotAt?: Date | null;
+  pickupSlotLabel?: string | null;
   shippingAddressId?: string;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -28,7 +36,8 @@ export async function createOrderFromCart(args: {
   if (!cart) throw new Error("Cart not found");
   if (cart.items.length === 0) throw new Error("Cart is empty");
 
-  const isCod = args.paymentMethod === PaymentMethod.COD;
+  const fulfillmentType =
+    args.fulfillmentType ?? FulfillmentType.DELIVERY;
 
   const order = await db.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -36,9 +45,12 @@ export async function createOrderFromCart(args: {
         orderNumber: makeOrderNumber(),
         userId: args.userId ?? null,
         email: args.email,
-        status: isCod ? OrderStatus.PENDING : OrderStatus.PENDING,
+        status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.AWAITING,
         paymentMethod: args.paymentMethod,
+        fulfillmentType,
+        pickupSlotAt: args.pickupSlotAt ?? null,
+        pickupSlotLabel: args.pickupSlotLabel ?? null,
         currency: cart.currency,
         subtotalCents: cart.subtotalCents,
         taxCents: cart.taxCents,

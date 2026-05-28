@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PaymentMethod } from "@prisma/client";
+import { FulfillmentType, PaymentMethod } from "@prisma/client";
 import { db } from "@/lib/db";
 import { OrderSummary } from "@/modules/orders";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,25 @@ export default async function OrderSuccessPage({
             <strong>
               {formatMoney(order.totalCents, order.currency)}
             </strong>{" "}
-            in cash when it is delivered. A confirmation email is on its way.
+            in cash when you{" "}
+            {order.fulfillmentType === FulfillmentType.PICKUP
+              ? "pick up your order"
+              : "receive delivery"}
+            .
+            {order.pickupSlotLabel ? (
+              <>
+                {" "}
+                Pickup: <strong>{order.pickupSlotLabel}</strong>.
+              </>
+            ) : null}{" "}
+            A confirmation email is on its way.
+          </p>
+        ) : order?.fulfillmentType === FulfillmentType.PICKUP &&
+          order.pickupSlotLabel ? (
+          <p className="mt-2 text-muted-foreground">
+            Your order is confirmed for pickup at{" "}
+            <strong>{order.pickupSlotLabel}</strong>. A confirmation email is on
+            its way.
           </p>
         ) : (
           <p className="mt-2 text-muted-foreground">

@@ -24,6 +24,8 @@ type Row = {
   status: string;
   paymentStatus: string;
   paymentMethod: string;
+  fulfillmentType: string;
+  pickupSlotLabel: string | null;
   totalCents: number;
   currency: string;
   hasRazorpayPayment: boolean;
@@ -38,6 +40,7 @@ export function OrdersTable({ rows }: { rows: Row[] }) {
           <TableHead>Order</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Payment</TableHead>
+          <TableHead>Fulfillment</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Total</TableHead>
           <TableHead>Date</TableHead>
@@ -61,6 +64,14 @@ export function OrdersTable({ rows }: { rows: Row[] }) {
                   <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                     Cash pending
                   </p>
+                ) : null}
+              </TableCell>
+              <TableCell className="max-w-[200px] text-xs">
+                <Badge variant="outline">
+                  {r.fulfillmentType === "PICKUP" ? "Pickup" : "Delivery"}
+                </Badge>
+                {r.pickupSlotLabel ? (
+                  <p className="mt-1 text-muted-foreground">{r.pickupSlotLabel}</p>
                 ) : null}
               </TableCell>
               <TableCell>

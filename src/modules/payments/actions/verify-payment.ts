@@ -3,19 +3,42 @@
 import { z } from "zod";
 import { verifyCheckoutSignature } from "@/lib/razorpay";
 import { getOptionalUser } from "@/modules/auth";
-import { PaymentMethod } from "@prisma/client";
+import { FulfillmentType, PaymentMethod } from "@prisma/client";
+import { findPickupSlotById } from "@/modules/checkout/lib/pickup-slots";
 import { createOrderFromCart, markOrderPaid } from "@/modules/orders";
 import { db } from "@/lib/db";
 import { sendOrderConfirmation } from "@/modules/payments/services/notify";
 import { logger } from "@/lib/logger";
 
-const inputSchema = z.object({
-  razorpayOrderId: z.string().min(1),
-  razorpayPaymentId: z.string().min(1),
-  razorpaySignature: z.string().min(1),
-  cartId: z.string().uuid(),
-  email: z.string().email(),
-});
+const inputSchema = z
+  .object({
+    razorpayOrderId: z.string().min(1),
+    razorpayPaymentId: z.string().min(1),
+    razorpaySignature: z.string().min(1),
+    cartId: z.string().uuid(),
+    email: z.string().email(),
+    fulfillmentType: z.enum(["DELIVERY", "PICKUP"]).default("DELIVERY"),
+    pickupSlotId: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fulfillmentType === "PICKUP") {
+      if (!data.pickupSlotId?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Select a pickup time",
+          path: ["pickupSlotId"],
+        });
+        return;
+      }
+      if (!findPickupSlotById(data.pickupSlotId)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Pickup time is no longer available",
+          path: ["pickupSlotId"],
+        });
+      }
+    }
+  });
 
 export type VerifyResult =
   | { ok: true; orderNumber: string; orderId: string }
@@ -39,7 +62,17 @@ export async function verifyAndPlaceOrderAction(
     razorpaySignature,
     cartId,
     email,
+    fulfillmentType,
+    pickupSlotId,
   } = parsed.data;
+
+  const isPickup = fulfillmentType === "PICKUP";
+  const pickupSlot = isPickup && pickupSlotId
+    ? findPickupSlotById(pickupSlotId)
+    : null;
+  if (isPickup && !pickupSlot) {
+    return { ok: false, error: "Pickup time is no longer available." };
+  }
 
   if (
     !verifyCheckoutSignature({
@@ -66,6 +99,11 @@ export async function verifyAndPlaceOrderAction(
         email,
         cartId,
         paymentMethod: PaymentMethod.ONLINE,
+        fulfillmentType: isPickup
+          ? FulfillmentType.PICKUP
+          : FulfillmentType.DELIVERY,
+        pickupSlotAt: pickupSlot ? new Date(pickupSlot.startsAt) : null,
+        pickupSlotLabel: pickupSlot?.label ?? null,
         razorpayOrderId,
         razorpayPaymentId,
       });
