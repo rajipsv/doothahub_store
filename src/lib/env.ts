@@ -99,3 +99,6 @@ export const env = createEnv({
 export const isRazorpayConfigured = Boolean(
   env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET,
 );
+
+/** Cash on delivery at checkout. Set COD_ENABLED=false to disable. */
+export const isCodEnabled = process.env.COD_ENABLED !== "false";

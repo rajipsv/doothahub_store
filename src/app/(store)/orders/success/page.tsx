@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PaymentMethod } from "@prisma/client";
 import { db } from "@/lib/db";
 import { OrderSummary } from "@/modules/orders";
 import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Order confirmed" };
 export const dynamic = "force-dynamic";
@@ -25,9 +27,19 @@ export default async function OrderSuccessPage({
     <div className="container mx-auto max-w-2xl py-12">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold tracking-tight">Thank you!</h1>
-        <p className="mt-2 text-muted-foreground">
-          Your order has been placed. A confirmation email is on its way.
-        </p>
+        {order?.paymentMethod === PaymentMethod.COD ? (
+          <p className="mt-2 text-muted-foreground">
+            Your order is confirmed. Pay{" "}
+            <strong>
+              {formatMoney(order.totalCents, order.currency)}
+            </strong>{" "}
+            in cash when it is delivered. A confirmation email is on its way.
+          </p>
+        ) : (
+          <p className="mt-2 text-muted-foreground">
+            Your order has been placed. A confirmation email is on its way.
+          </p>
+        )}
       </div>
       {order ? (
         <OrderSummary order={order} />

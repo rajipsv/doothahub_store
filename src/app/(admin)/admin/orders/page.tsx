@@ -12,8 +12,11 @@ export default async function AdminOrdersPage() {
     orderNumber: o.orderNumber,
     email: o.email,
     status: o.status,
+    paymentStatus: o.paymentStatus,
+    paymentMethod: o.paymentMethod,
     totalCents: o.totalCents,
     currency: o.currency,
+    hasRazorpayPayment: Boolean(o.razorpayPaymentId),
     createdAt: o.createdAt.toISOString(),
   }));
   return (

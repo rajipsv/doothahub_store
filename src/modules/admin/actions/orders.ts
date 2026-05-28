@@ -5,6 +5,7 @@ import { OrderStatus } from "@prisma/client";
 import { requireRole } from "@/modules/auth";
 import {
   getOrder,
+  markCodPaymentReceived,
   updateOrderStatus,
 } from "@/modules/orders";
 import { refundRazorpayPayment } from "@/modules/payments";
@@ -32,4 +33,22 @@ export async function refundOrderAction(formData: FormData): Promise<void> {
   await refundRazorpayPayment({ razorpayPaymentId: order.razorpayPaymentId });
   bustOrderCaches(id);
   revalidatePath("/admin/orders");
+}
+
+export async function markCodCashReceivedAction(
+  formData: FormData,
+): Promise<void> {
+  await requireRole("ADMIN");
+  const id = formData.get("id");
+  if (typeof id !== "string") return;
+  try {
+    await markCodPaymentReceived(id);
+    bustOrderCaches(id);
+    revalidatePath("/admin/orders");
+  } catch (err) {
+    logger.warn("markCodCashReceived failed", {
+      orderId: id,
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
 }

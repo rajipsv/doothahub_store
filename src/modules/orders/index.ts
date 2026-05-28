@@ -1,6 +1,7 @@
 export {
   createOrderFromCart,
   markOrderPaid,
+  markCodPaymentReceived,
   markOrderFailed,
   markOrderRefunded,
   getOrder,

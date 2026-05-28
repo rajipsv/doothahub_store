@@ -97,7 +97,7 @@ model VerificationToken {
 
 model Address {
   id         String  @id @default(uuid()) @db.Uuid
-  userId     String  @db.Uuid
+  userId     String? @db.Uuid
   fullName   String
   line1      String
   line2      String?
@@ -108,7 +108,7 @@ model Address {
   phone      String?
   isDefault  Boolean @default(false)
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
 
   createdAt DateTime  @default(now())
@@ -289,6 +289,11 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+enum PaymentMethod {
+  ONLINE
+  COD
+}
+
 model Order {
   id                    String        @id @default(uuid()) @db.Uuid
   tenantId              String?       @db.Uuid
@@ -297,6 +302,7 @@ model Order {
   email                 String
   status                OrderStatus   @default(PENDING)
   paymentStatus         PaymentStatus @default(AWAITING)
+  paymentMethod         PaymentMethod @default(ONLINE)
   subtotalCents         Int
   taxCents              Int           @default(0)
   shippingCents         Int           @default(0)

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { CheckoutForm } from "@/modules/checkout";
 import { CartSummary, getCurrentCart } from "@/modules/cart";
 import { getOptionalUser } from "@/modules/auth";
-import { env } from "@/lib/env";
+import { env, isCodEnabled, isRazorpayConfigured } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Checkout" };
 export const dynamic = "force-dynamic";
@@ -23,6 +23,8 @@ export default async function CheckoutPage() {
             defaultEmail={user?.email ?? undefined}
             defaultName={user?.name ?? undefined}
             appName={env.NEXT_PUBLIC_APP_NAME}
+            codEnabled={isCodEnabled}
+            razorpayConfigured={isRazorpayConfigured}
           />
         </div>
         <CartSummary cart={cart} />

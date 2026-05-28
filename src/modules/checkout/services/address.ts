@@ -6,7 +6,6 @@ export async function createCheckoutAddress(args: {
   userId: string | null;
   input: CheckoutInput;
 }) {
-  if (!args.userId) return null;
   return db.address.create({
     data: {
       userId: args.userId,

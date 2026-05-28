@@ -9,6 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { PaymentMethod } from "@prisma/client";
 import type { OrderWithItems } from "@/modules/orders";
 
 export function OrderConfirmationEmail({ order }: { order: OrderWithItems }) {
@@ -55,6 +56,12 @@ export function OrderConfirmationEmail({ order }: { order: OrderWithItems }) {
           <Heading as="h2" style={{ fontSize: "16px" }}>
             Total: {fmt(order.totalCents)}
           </Heading>
+          {order.paymentMethod === PaymentMethod.COD ? (
+            <Text style={{ marginTop: "12px" }}>
+              <strong>Payment:</strong> Cash on delivery — please keep{" "}
+              {fmt(order.totalCents)} ready for the delivery person.
+            </Text>
+          ) : null}
           <Hr />
           <Text style={{ color: "#888", fontSize: "12px" }}>
             We&apos;ll email you again when your order ships.

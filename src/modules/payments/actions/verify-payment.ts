@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { verifyCheckoutSignature } from "@/lib/razorpay";
 import { getOptionalUser } from "@/modules/auth";
+import { PaymentMethod } from "@prisma/client";
 import { createOrderFromCart, markOrderPaid } from "@/modules/orders";
 import { db } from "@/lib/db";
 import { sendOrderConfirmation } from "@/modules/payments/services/notify";
@@ -64,6 +65,7 @@ export async function verifyAndPlaceOrderAction(
         userId: user?.id ?? null,
         email,
         cartId,
+        paymentMethod: PaymentMethod.ONLINE,
         razorpayOrderId,
         razorpayPaymentId,
       });

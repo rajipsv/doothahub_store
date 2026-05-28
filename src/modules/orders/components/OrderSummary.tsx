@@ -1,8 +1,13 @@
 import { formatMoney } from "@/lib/utils";
 import type { OrderWithItems } from "@/modules/orders/types";
 import { Badge } from "@/components/ui/badge";
+import { PaymentMethod } from "@prisma/client";
 
 export function OrderSummary({ order }: { order: OrderWithItems }) {
+  const isCod = order.paymentMethod === PaymentMethod.COD;
+  const codPending =
+    isCod && order.paymentStatus === "AWAITING";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -10,10 +15,24 @@ export function OrderSummary({ order }: { order: OrderWithItems }) {
           <p className="text-sm text-muted-foreground">Order number</p>
           <p className="text-xl font-bold tracking-tight">{order.orderNumber}</p>
         </div>
-        <Badge variant={order.status === "PAID" ? "success" : "secondary"}>
-          {order.status}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant={order.status === "PAID" ? "success" : "secondary"}>
+            {order.status}
+          </Badge>
+          <Badge variant="outline">{isCod ? "Cash on delivery" : "Paid online"}</Badge>
+        </div>
       </div>
+
+      {codPending ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-700 dark:bg-amber-950">
+          <p className="font-semibold">Pay on delivery</p>
+          <p className="mt-1 text-muted-foreground">
+            Please keep{" "}
+            <strong>{formatMoney(order.totalCents, order.currency)}</strong> in
+            cash ready for the delivery person.
+          </p>
+        </div>
+      ) : null}
 
       <div className="rounded-lg border bg-card">
         <div className="divide-y">
@@ -22,7 +41,7 @@ export function OrderSummary({ order }: { order: OrderWithItems }) {
               <div>
                 <p className="font-medium">{it.productTitle}</p>
                 <p className="text-xs text-muted-foreground">
-                  {it.variantSku} \u00b7 qty {it.quantity}
+                  {it.variantSku} · qty {it.quantity}
                 </p>
               </div>
               <p className="font-semibold">
@@ -53,7 +72,7 @@ export function OrderSummary({ order }: { order: OrderWithItems }) {
 
       {order.shippingAddress ? (
         <div className="rounded-lg border bg-card p-4 text-sm">
-          <p className="mb-2 font-semibold">Shipping address</p>
+          <p className="mb-2 font-semibold">Delivery address</p>
           <p>{order.shippingAddress.fullName}</p>
           <p>{order.shippingAddress.line1}</p>
           {order.shippingAddress.line2 ? <p>{order.shippingAddress.line2}</p> : null}
@@ -62,6 +81,11 @@ export function OrderSummary({ order }: { order: OrderWithItems }) {
             {order.shippingAddress.postalCode}
           </p>
           <p>{order.shippingAddress.country}</p>
+          {order.shippingAddress.phone ? (
+            <p className="mt-2 text-muted-foreground">
+              Phone: {order.shippingAddress.phone}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

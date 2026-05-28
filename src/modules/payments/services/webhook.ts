@@ -1,4 +1,5 @@
 import "server-only";
+import { PaymentMethod } from "@prisma/client";
 import {
   isEventProcessed,
   recordEvent,
@@ -110,6 +111,7 @@ async function ensureOrderForPayment(payment: RazorpayPaymentEntity) {
     userId,
     email,
     cartId,
+    paymentMethod: PaymentMethod.ONLINE,
     razorpayOrderId: payment.order_id,
     razorpayPaymentId: payment.id,
   });

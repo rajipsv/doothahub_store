@@ -1,5 +1,5 @@
 import "server-only";
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getCart, getCartById } from "@/modules/cart";
@@ -17,8 +17,9 @@ export async function createOrderFromCart(args: {
   userId: string | null;
   email: string;
   cartId?: string;
+  paymentMethod: PaymentMethod;
   shippingAddressId?: string;
-  razorpayOrderId: string;
+  razorpayOrderId?: string;
   razorpayPaymentId?: string;
 }) {
   const cart = args.cartId
@@ -27,21 +28,24 @@ export async function createOrderFromCart(args: {
   if (!cart) throw new Error("Cart not found");
   if (cart.items.length === 0) throw new Error("Cart is empty");
 
+  const isCod = args.paymentMethod === PaymentMethod.COD;
+
   const order = await db.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
         orderNumber: makeOrderNumber(),
         userId: args.userId ?? null,
         email: args.email,
-        status: OrderStatus.PENDING,
+        status: isCod ? OrderStatus.PENDING : OrderStatus.PENDING,
         paymentStatus: PaymentStatus.AWAITING,
+        paymentMethod: args.paymentMethod,
         currency: cart.currency,
         subtotalCents: cart.subtotalCents,
         taxCents: cart.taxCents,
         shippingCents: cart.shippingCents,
         discountCents: cart.discountCents,
         totalCents: cart.totalCents,
-        razorpayOrderId: args.razorpayOrderId,
+        razorpayOrderId: args.razorpayOrderId ?? null,
         razorpayPaymentId: args.razorpayPaymentId ?? null,
         shippingAddressId: args.shippingAddressId ?? null,
         couponCode: cart.couponCode,
@@ -81,9 +85,6 @@ export async function createOrderFromCart(args: {
 /**
  * Mark an order as paid. Idempotent: safe to call from both the
  * client-side post-checkout action and the webhook handler.
- *
- * Looks up the order by `razorpayOrderId` (the only id available before the
- * payment) and stamps `razorpayPaymentId` if not already set.
  */
 export async function markOrderPaid(args: {
   razorpayOrderId: string;
@@ -104,7 +105,27 @@ export async function markOrderPaid(args: {
     data: {
       status: OrderStatus.PAID,
       paymentStatus: PaymentStatus.SUCCEEDED,
+      paymentMethod: PaymentMethod.ONLINE,
       razorpayPaymentId: args.razorpayPaymentId ?? order.razorpayPaymentId,
+    },
+  });
+}
+
+/** Admin confirms cash collected for a COD order. */
+export async function markCodPaymentReceived(orderId: string) {
+  const order = await db.order.findUnique({ where: { id: orderId } });
+  if (!order) return null;
+  if (order.paymentMethod !== PaymentMethod.COD) {
+    throw new Error("Not a cash-on-delivery order");
+  }
+  if (order.paymentStatus === PaymentStatus.SUCCEEDED) {
+    return order;
+  }
+  return db.order.update({
+    where: { id: orderId },
+    data: {
+      status: OrderStatus.PAID,
+      paymentStatus: PaymentStatus.SUCCEEDED,
     },
   });
 }
