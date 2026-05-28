@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { ProductStatus } from "@prisma/client";
-import { Upload } from "lucide-react";
+import { ImageIcon, Upload } from "lucide-react";
 import { db } from "@/lib/db";
 import {
   ProductFormDrawer,
@@ -129,6 +129,12 @@ export default async function AdminProductsPage({
                 <Link href="/admin/products/import">
                   <Upload className="mr-1 h-4 w-4" />
                   Import CSV
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/products/update-images">
+                  <ImageIcon className="mr-1 h-4 w-4" />
+                  Update images
                 </Link>
               </Button>
               <ProductFormDrawer

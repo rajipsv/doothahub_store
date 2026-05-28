@@ -107,6 +107,13 @@ export default async function ImportProductsPage() {
             first image. Leave blank if you{"\u2019"}ll add images later from the
             product form.
           </li>
+          <li>
+            To set images on <strong>existing</strong> products, use{" "}
+            <Link href="/admin/products/update-images" className="underline">
+              Bulk update images
+            </Link>{" "}
+            instead.
+          </li>
         </ul>
       </div>
     </div>

@@ -14,6 +14,11 @@ export {
   type ImportRowResult,
 } from "@/modules/admin/actions/import-products";
 export {
+  importProductImagesAction,
+  type ImageImportSummary,
+  type ImageImportRowResult,
+} from "@/modules/admin/actions/import-product-images";
+export {
   markShippedAction,
   refundOrderAction,
 } from "@/modules/admin/actions/orders";
@@ -32,4 +37,5 @@ export { OrdersTable } from "@/modules/admin/components/OrdersTable";
 export { CustomersTable } from "@/modules/admin/components/CustomersTable";
 export { ProductFormDrawer } from "@/modules/admin/components/ProductFormDrawer";
 export { ProductImportForm } from "@/modules/admin/components/ProductImportForm";
+export { ProductImageImportForm } from "@/modules/admin/components/ProductImageImportForm";
 export { TaxonomyManager } from "@/modules/admin/components/TaxonomyManager";
