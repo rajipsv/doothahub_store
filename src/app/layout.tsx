@@ -20,7 +20,16 @@ export const metadata: Metadata = {
     template: "%s | DoothaHub Store",
   },
   description:
-    "Modern, fast, SEO-first e-commerce platform built on Next.js, Prisma, and Razorpay.",
+    "Shop pickles, snacks, and more with delivery or store pickup.",
+  applicationName: "DoothaHub Store",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DoothaHub",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -36,6 +45,7 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

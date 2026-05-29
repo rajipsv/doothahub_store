@@ -14,7 +14,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       className={`storefront ${display.variable} flex min-h-screen flex-col bg-background font-sans text-foreground`}
     >
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="safe-area-bottom flex-1">{children}</main>
       <Footer />
     </div>
   );

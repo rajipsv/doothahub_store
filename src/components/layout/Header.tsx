@@ -20,7 +20,7 @@ export async function Header() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/70 backdrop-blur-xl dark:border-white/10">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/70 backdrop-blur-xl dark:border-white/10 safe-area-top">
       <div className="container flex h-14 items-center justify-between gap-3 md:h-[4.5rem]">
         <Link
           href="/"
