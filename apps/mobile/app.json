@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "DoothaHub",
-    "slug": "doothahub",
+    "slug": "doothahub-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +29,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "doothahub-mobile"
+        "projectId": "b3cb3934-6236-438e-8b2e-c9032dbe7460"
       },
       "apiUrl": "https://doothahub.vercel.app"
     }

@@ -9,6 +9,8 @@
   "scripts": {
     "mobile": "pnpm --filter @doothahub/mobile start",
     "mobile:android": "pnpm --filter @doothahub/mobile android",
+    "mobile:build:android": "pnpm --filter @doothahub/mobile exec eas build -p android --profile production",
+    "mobile:build:preview": "pnpm --filter @doothahub/mobile exec eas build -p android --profile preview",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",

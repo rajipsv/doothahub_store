@@ -1,0 +1,11 @@
+android-twa/
+.next/
+node_modules/
+apps/mobile/node_modules/
+packages/shared/node_modules/
+.env*
+*.apk
+*.aab
+playwright-report/
+test-results/
+coverage/

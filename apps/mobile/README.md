@@ -36,21 +36,28 @@ Press `a` for Android emulator, or scan QR with Expo Go.
 
 ## EAS production build (Play Store)
 
+**Important:** always run EAS commands from `apps/mobile` (not repo root or `src/app/api/mobile`).
+
 1. Install EAS: `npm i -g eas-cli`
 2. Login: `eas login`
-3. From `apps/mobile`, link the project (first time only):
+3. From `apps/mobile` (first time only — already linked):
 
 ```bash
 cd apps/mobile
-eas init
+eas init   # skip if projectId already in app.json
 ```
-
-This writes a real `projectId` into `app.json`. Commit the updated config.
 
 4. Build the release `.aab`:
 
 ```bash
+cd apps/mobile
 eas build -p android --profile production
+```
+
+Or from repo root:
+
+```bash
+pnpm mobile:build:android
 ```
 
 5. Submit to Google Play (internal track, draft release):
