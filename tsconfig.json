@@ -34,5 +34,5 @@
     ".next/types/**/*.ts",
     "prisma/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next"]
+  "exclude": ["node_modules", ".next", "apps/mobile"]
 }

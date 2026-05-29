@@ -28,11 +28,14 @@ For an India-based storefront Razorpay is the better default:
 ## Project structure
 
 ```
+apps/mobile/            # Expo Android customer app (native UI, com.doothahub.app)
+packages/shared/        # Zod schemas, formatMoney, pickup rules (web + mobile)
+android-twa/            # Legacy TWA wrapper (com.doothahub.store) — optional
 src/
-  app/                  # Next.js routes (store, auth, account, admin, api)
+  app/                  # Next.js routes (store, auth, account, admin, api/mobile/v1)
   modules/              # domain modules (catalog, cart, checkout, orders, payments, ...)
   components/           # shared UI primitives + layout + seo
-  lib/                  # cross-cutting singletons (db, razorpay, env, ...)
+  lib/                  # cross-cutting singletons (db, razorpay, mobile-auth, ...)
   middleware.ts         # auth + RBAC gating
 prisma/                 # schema, migrations, seed, raw SQL (FTS)
 emails/                 # React Email templates
@@ -168,6 +171,9 @@ cloudflared tunnel --url http://localhost:3000
 | `pnpm db:studio`     | open Prisma Studio                    |
 | `pnpm db:seed`       | seed demo data                        |
 | `pnpm db:fts`        | apply the manual FTS migration        |
+| `pnpm mobile`        | start Expo dev server (`apps/mobile`) |
+| `pnpm mobile:android`| run on Android emulator/device        |
+| `pnpm mobile:typecheck` | TypeScript check for mobile app    |
 
 ## Deployment
 
@@ -184,11 +190,22 @@ cloudflared tunnel --url http://localhost:3000
 
 > **Disable auto-seed:** set `SEED_ON_DEPLOY=false` in the Vercel env vars if you don't want the demo data inserted on first deploy.
 
+## Android apps
+
+Two Android options ship from this repo:
+
+| Path | Folder | Package | Experience |
+| ---- | ------ | ------- | ---------- |
+| **B (recommended)** | `apps/mobile/` | `com.doothahub.app` | Native Expo app — tabs, Razorpay RN SDK, mobile REST API |
+| A (legacy) | `android-twa/` | `com.doothahub.store` | Trusted Web Activity — your website in Chrome |
+
+The native app talks to **`/api/mobile/v1/*`** (JWT auth + `X-Cart-Session` for guest carts). See [`apps/mobile/README.md`](apps/mobile/README.md) for local dev and EAS Play Store build steps.
+
 ## Architecture decisions
 
 See `.cursor/rules/architecture.mdc` for binding conventions. TL;DR:
 
-- One Next.js app, no monorepo. Modules give 95% of the maintainability with 10% of the overhead.
+- Next.js web app at repo root; **pnpm workspace** adds `apps/mobile` and `packages/shared` without moving the web app.
 - Server-first: every fetch is in a Server Component or Server Action. Client components only where needed.
 - Prisma client is a singleton (`@/lib/db`). The Razorpay client is **lazily** instantiated (`getRazorpay()` in `@/lib/razorpay`) so importing the module never reads `process.env` at top level — this keeps `next build` happy.
 - Services own all DB access; actions and routes go through services.

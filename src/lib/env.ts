@@ -39,6 +39,7 @@ export const env = createEnv({
     // refuses to sign JWTs and sign-in/sign-up routes will 500 at request
     // time (but the rest of the site still works).
     AUTH_SECRET: z.string().min(32).optional(),
+    MOBILE_JWT_SECRET: z.string().min(32).optional(),
     AUTH_URL: z.string().url().optional(),
     AUTH_TRUST_HOST: optionalNonEmpty,
 

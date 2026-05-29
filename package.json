@@ -2,12 +2,19 @@
   "name": "doothahub-store",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
+    "mobile": "pnpm --filter @doothahub/mobile start",
+    "mobile:android": "pnpm --filter @doothahub/mobile android",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "mobile:typecheck": "pnpm --filter @doothahub/mobile exec tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -58,6 +65,8 @@
     "server-only": "^0.0.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "@doothahub/shared": "workspace:*",
+    "jose": "^5.9.6",
     "zod": "^3.23.8",
     "zustand": "^5.0.1"
   },
@@ -95,6 +104,12 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "~18.3.12",
+      "@types/react-dom": "~18.3.1"
+    }
   },
   "packageManager": "pnpm@9.12.3",
   "prisma": {

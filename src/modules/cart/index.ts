@@ -1,12 +1,16 @@
 export {
   getCart,
+  getCartForAccess,
   getCartById,
   addItemToCart,
   updateItemQuantity,
   removeItem,
   applyCoupon,
   mergeAnonymousCartIntoUser,
+  mergeCartSessionIntoUser,
+  resolveCartSessionKey,
   clearCart,
+  getCartCountForAccess,
 } from "@/modules/cart/services/cart";
 export {
   addItemAction,
