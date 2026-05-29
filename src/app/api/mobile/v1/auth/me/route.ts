@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getMobileUser, mobileError, mobileJson, mobileOptions, withMobileCors } from "@/lib/mobile-api";
 import { serializeUser } from "@/lib/mobile-serializers";
-import { findUserByEmail } from "@/modules/auth/services/users";
 import { db } from "@/lib/db";
 
 export const runtime = "nodejs";

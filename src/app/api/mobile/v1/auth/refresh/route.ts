@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { verifyMobileToken, signMobileTokenPair } from "@/lib/mobile-auth";
-import { findUserByEmail } from "@/modules/auth/services/users";
+import { findUserByEmail } from "@/modules/auth";
 import {
   mobileError,
   mobileJson,

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { listProducts, listFeaturedProducts } from "@/modules/catalog/services/products";
+import { listProducts, listFeaturedProducts } from "@/modules/catalog";
 import {
   mobileJson,
   mobileOptions,

@@ -13,3 +13,8 @@ export {
   type SignInInput,
   type SignUpInput,
 } from "@/modules/auth/schemas/credentials";
+export {
+  verifyCredentials,
+  findUserByEmail,
+  createUserWithPassword,
+} from "@/modules/auth/services/users";

@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { PaymentMethod } from "@prisma/client";
-import { getCartForAccess } from "@/modules/cart";
-import { splitCartByPickupEligibility } from "@/modules/cart/services/pickup-eligibility";
+import { getCartForAccess, splitCartByPickupEligibility } from "@/modules/cart";
 import { createCheckoutOrders } from "@/modules/orders";
-import { createCheckoutAddress } from "@/modules/checkout/services/address";
-import { placeCodOrderSchema } from "@/modules/checkout/schemas/checkout-order";
-import { sendOrderConfirmation } from "@/modules/payments/services/notify";
+import {
+  createCheckoutAddress,
+  placeCodOrderSchema,
+} from "@/modules/checkout";
+import { sendOrderConfirmation } from "@/modules/payments/server";
 import { normalizeIndianPhone } from "@/modules/payments/lib/phone";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { isCodEnabled } from "@/lib/env";

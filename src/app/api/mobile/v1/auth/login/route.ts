@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { signInSchema } from "@doothahub/shared";
-import { verifyCredentials } from "@/modules/auth/services/users";
+import { verifyCredentials } from "@/modules/auth";
 import { signMobileTokenPair } from "@/lib/mobile-auth";
 import { mergeCartSessionIntoUser } from "@/modules/cart";
 import {

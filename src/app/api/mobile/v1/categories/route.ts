@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getCachedCategories } from "@/modules/catalog/queries";
+import { getCachedCategories } from "@/modules/catalog";
 import { mobileJson, mobileOptions, withMobileCors } from "@/lib/mobile-api";
 
 export const runtime = "nodejs";

@@ -1,14 +1,13 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyCheckoutSignature } from "@/lib/razorpay";
-import { getCartById } from "@/modules/cart";
-import { splitCartByPickupEligibility } from "@/modules/cart/services/pickup-eligibility";
+import { getCartById, splitCartByPickupEligibility } from "@/modules/cart";
 import { PaymentMethod } from "@prisma/client";
 import { createCheckoutOrders, markOrderPaid } from "@/modules/orders";
 import { db } from "@/lib/db";
-import { sendOrderConfirmation } from "@/modules/payments/services/notify";
+import { sendOrderConfirmation } from "@/modules/payments/server";
 import { logger } from "@/lib/logger";
-import { onlineCheckoutFulfillmentSchema } from "@/modules/checkout/schemas/checkout-order";
+import { onlineCheckoutFulfillmentSchema } from "@/modules/checkout";
 import {
   getMobileUser,
   mobileError,

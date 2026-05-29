@@ -1,9 +1,11 @@
 import "server-only";
-import type { FullCart } from "@/modules/cart/types";
+import type { FullCart } from "@/modules/cart";
 import type { ProductCardData } from "@/modules/catalog/types";
 import { isPickupEligible } from "@/lib/pickup-eligibility";
-import { toCartSplitSummary } from "@/modules/cart/lib/cart-split-summary";
-import { splitCartByPickupEligibility } from "@/modules/cart/services/pickup-eligibility";
+import {
+  splitCartByPickupEligibility,
+  toCartSplitSummary,
+} from "@/modules/cart";
 
 export function serializeProductCard(product: ProductCardData) {
   const variant = product.variants[0];

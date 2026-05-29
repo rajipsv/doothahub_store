@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getProductBySlug } from "@/modules/catalog/services/products";
+import { getProductBySlug } from "@/modules/catalog";
 import { isPickupEligible } from "@/lib/pickup-eligibility";
 import {
   mobileError,

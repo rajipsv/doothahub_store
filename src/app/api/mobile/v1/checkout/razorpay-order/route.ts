@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { getCartForAccess } from "@/modules/cart";
-import { createRazorpayOrder } from "@/modules/payments/services/razorpay";
+import { createRazorpayOrder } from "@/modules/payments/server";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { env, isRazorpayConfigured } from "@/lib/env";
 import { normalizeIndianPhone } from "@/modules/payments/lib/phone";

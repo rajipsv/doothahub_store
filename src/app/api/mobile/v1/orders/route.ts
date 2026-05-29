@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { listUserOrders, getOrder } from "@/modules/orders/services/orders";
+import { listUserOrders, getOrder } from "@/modules/orders";
 import {
   getMobileUser,
   mobileError,
